@@ -32,7 +32,7 @@ export function demoBar() {
   if (!DEMO) return;
   const bar = document.createElement('div');
   bar.className = 'demo-bar';
-  bar.innerHTML = 'Demo preview: sample data only, no real emails, payments or bookings. <a href="#" id="demo-reset">Reset demo</a>';
+  bar.innerHTML = 'Demo preview: sample data only, no real emails, payments or bookings. <a href="https://trueyxl.github.io/hbdywi-feedback/" target="_blank" rel="noopener">Give feedback</a> · <a href="#" id="demo-reset">Reset demo</a>';
   document.body.prepend(bar);
   bar.querySelector('#demo-reset').onclick = (e) => { e.preventDefault(); localStorage.removeItem('hb_demo'); location.reload(); };
 }
