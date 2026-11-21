@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Book your author visit · HBDYWI</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#f6f1ea">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght,SOFT@0,9..144,400..600,0..100;1,9..144,400..600,0..100&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 14c-2.6-1.8-3.4-5-2-8.5 1.2.6 2 1.4 2 1.4s.8-.8 2-1.4c1.4 3.5.6 6.7-2 8.5Z' fill='%23b4566e'/%3E%3Cpath d='M16 29V15' stroke='%232f3a2f' stroke-width='2'/%3E%3C/svg%3E">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><div class="wrap"><a class="brand" href="./"><span data-bloom></span><span>The Bloom Project</span></a><a class="btn sm ghost" href="./">Home</a></div></header>
+<main id="main" class="page"><div class="wrap narrow">
+
+<div id="vb"><p class="muted">Loading availability…</p></div>
+</div></main>
+<footer class="foot"><div class="wrap"><span>© Imani Green · The Bloom Project</span><span><a href="privacy">Privacy</a></span></div></footer>
+<script type="module">
+import { $, $$, fmt, fmtDate, fmtTime, tzName, viewerTz, esc, formData, busy, say, params, header, BLOOM_SVG } from './js/common.js';
+import { api, track, demoBar, DEMO, amazonHref } from './js/api.js';
+demoBar(); header(); $$('[data-bloom]').forEach((el) => (el.outerHTML = BLOOM_SVG));
+
+const t = params.get('t');
+let state = null, shownTz = viewerTz(), picked = null;
+async function load() {
+  const box = $('#vb');
+  try { state = await api('visit/slots?t=' + encodeURIComponent(t || '')); } catch { box.innerHTML = '<h1>Booking link not found</h1><p class="muted">Use the link from your eligibility email.</p>'; return; }
+  render();
+}
+function render() {
+  const box = $('#vb'), s = state, v = s.visit;
+  const head = `<span class="eyebrow">${esc(s.group.name)} · complimentary 30-minute visit</span><h1 style="font-size:clamp(2rem,6vw,3.2rem)">Book your author visit</h1>`;
+  if (!s.eligible) { box.innerHTML = head + `<div class="card"><p>Your group unlocks the visit once <b>${s.threshold}</b> members have joined. You're at <b>${s.group.member_count}</b>.</p></div>`; return; }
+  if (v?.status === 'completed') { box.innerHTML = head + '<div class="card"><p>Your group has already had its complimentary visit. Thank you!</p></div>'; return; }
+  const booked = v?.status === 'booked';
+  const zones = [...new Set([viewerTz(), s.group.timezone, s.author_timezone])];
+  const byDay = {};
+  for (const iso of s.slots) { const k = fmtDate(iso, shownTz); (byDay[k] ||= []).push(iso); }
+  box.innerHTML = head + `
+    ${booked ? `<div class="card" style="margin-bottom:20px"><div class="unlock yes"><span aria-hidden="true">📅</span><span>Booked: ${esc(fmt(v.starts_at, shownTz, { weekday: 'long', month: 'long', timeZoneName: 'short' }))}</span></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">${v.zoom_url ? `<a class="btn sm" href="${esc(v.zoom_url)}">Zoom link</a>` : ''}<button class="btn sm ghost" id="cancel" type="button">Cancel visit</button></div>
+      <p class="small muted" style="margin:12px 0 0">To reschedule, choose a new time below. Your group keeps its single visit.</p></div>` : ''}
+    <div class="card">
+      <div class="field"><label for="tzsel">Show times in</label><select id="tzsel">${zones.map((z) => `<option value="${z}" ${z === shownTz ? 'selected' : ''}>${z.replace(/_/g, ' ')} · ${tzName(z)}${z === viewerTz() ? ' (your device)' : z === s.group.timezone ? ' (your group)' : " (Imani's)"}</option>`).join('')}</select></div>
+      ${s.slots.length ? `<div class="days">${Object.entries(byDay).map(([day, list]) => `<div class="day"><h3>${esc(day)}</h3><div class="times">${list.map((iso) => `<button type="button" data-iso="${iso}" aria-pressed="${iso === picked}">${esc(fmtTime(iso, shownTz))}</button>`).join('')}</div></div>`).join('')}</div>`
+        : '<p class="muted">No open times right now. Please check back soon.</p>'}
+      <div id="confirm" class="${picked ? '' : 'hidden'}" style="margin-top:22px;position:sticky;bottom:12px">
+        <button class="btn bloom block" id="book" type="button">${booked ? 'Move visit to' : 'Confirm'} ${picked ? esc(fmt(picked, shownTz, { timeZoneName: 'short' })) : ''}</button>
+      </div>
+      <div class="msg" id="v-msg" aria-live="polite"></div>
+      <p class="small muted" style="margin:14px 0 0">Times need at least ${s.min_notice_hours} hours' notice. Your booking is confirmed instantly. No approval needed.</p>
+    </div>`;
+  $('#tzsel').onchange = (e) => { shownTz = e.target.value; render(); };
+  $$('.times button').forEach((b) => (b.onclick = () => { picked = b.dataset.iso; render(); $('#book')?.focus(); }));
+  $('#book')?.addEventListener('click', async (e) => {
+    busy(e.currentTarget, true, 'Booking…');
+    try {
+      const r = await api('visit/book', { method: 'POST', body: { t, starts_at: picked, tz: shownTz } });
+      picked = null; await load();
+      say($('#v-msg'), r.rescheduled ? 'Rescheduled ✓ We emailed the new details.' : 'Booked ✓ Confirmation and calendar invite are on the way.', 'ok');
+    } catch (err) { busy(e.currentTarget, false); say($('#v-msg'), err.message); if (err.status === 409) { picked = null; setTimeout(load, 1200); } }
+  });
+  $('#cancel')?.addEventListener('click', async (e) => {
+    if (!e.currentTarget.dataset.sure) { e.currentTarget.dataset.sure = 1; e.currentTarget.textContent = 'Tap again to confirm cancel'; return; }
+    busy(e.currentTarget, true, 'Cancelling…');
+    try { await api('visit/cancel', { method: 'POST', body: { t, tz: shownTz } }); await load(); say($('#v-msg'), 'Cancelled. You can book a new time anytime.', 'ok'); }
+    catch (err) { say($('#v-msg'), err.message); }
+  });
+}
+load();
+
+</script>
+</body>
+</html>

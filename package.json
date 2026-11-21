@@ -1,0 +1,12 @@
+{
+  "name": "hbdywi-funnel",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx wrangler pages dev public --compatibility-date=2026-11-01",
+    "deploy": "npx wrangler pages deploy public --project-name hbdywi-funnel",
+    "deploy:cron": "cd cron-worker && npx wrangler deploy",
+    "sync": "cp functions/_lib/time.js public/js/time.js",
+    "test": "node --test tests/*.test.js"
+  }
+}

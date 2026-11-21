@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Group dashboard · HBDYWI</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#f6f1ea">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght,SOFT@0,9..144,400..600,0..100;1,9..144,400..600,0..100&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 14c-2.6-1.8-3.4-5-2-8.5 1.2.6 2 1.4 2 1.4s.8-.8 2-1.4c1.4 3.5.6 6.7-2 8.5Z' fill='%23b4566e'/%3E%3Cpath d='M16 29V15' stroke='%232f3a2f' stroke-width='2'/%3E%3C/svg%3E">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><div class="wrap"><a class="brand" href="./"><span data-bloom></span><span>The Bloom Project</span></a><a class="btn sm ghost" href="./">Home</a></div></header>
+<main id="main" class="page"><div class="wrap narrow">
+
+<div id="gd"><p class="muted">Loading your group…</p></div>
+</div></main>
+<footer class="foot"><div class="wrap"><span>© Imani Green · The Bloom Project</span><span><a href="privacy">Privacy</a></span></div></footer>
+<script type="module">
+import { $, $$, fmt, fmtDate, fmtTime, tzName, viewerTz, esc, formData, busy, say, params, header, BLOOM_SVG } from './js/common.js';
+import { api, track, demoBar, DEMO, amazonHref } from './js/api.js';
+demoBar(); header(); $$('[data-bloom]').forEach((el) => (el.outerHTML = BLOOM_SVG));
+
+const TZS = ['America/Los_Angeles','America/Denver','America/Phoenix','America/Chicago','America/New_York','America/Toronto','America/Halifax','America/Anchorage','Pacific/Honolulu','Europe/London','Europe/Paris','Africa/Lagos','Africa/Johannesburg','Asia/Dubai','Asia/Kolkata','Asia/Singapore','Australia/Sydney'];
+function fillTz(sel, current) { const v = current || viewerTz(); const list = TZS.includes(v) ? TZS : [v, ...TZS];
+  sel.innerHTML = list.map((t) => `<option value="${t}" ${t === v ? 'selected' : ''}>${t.replace(/_/g, ' ')} (${tzName(t)})</option>`).join(''); }
+
+const t = params.get('t');
+async function load() {
+  const box = $('#gd');
+  if (!t) { box.innerHTML = '<h1>Link missing</h1><p>Open the dashboard link from your group email.</p>'; return; }
+  let r; try { r = await api('groups/' + t); } catch (e) { box.innerHTML = `<h1>Group not found</h1><p class="muted">Check the link in your email, or <a href="start-group">start a new group</a>.</p>`; return; }
+  const g = r.group, n = r.member_count, need = r.threshold;
+  const dots = Array.from({ length: Math.max(need, n) }, (_, i) => `<span class="dot ${i < n ? 'on' : ''} ${i >= need ? 'extra' : ''}">${i + 1}</span>`).join('');
+  const v = r.visit;
+  const visitHtml = !r.eligible
+    ? `<div class="unlock"><span aria-hidden="true">🔒</span><span><b>${need - n} more</b> ${need - n === 1 ? 'member' : 'members'} to unlock your free author visit.</span></div>`
+    : v && v.status === 'booked'
+      ? `<div class="unlock yes"><span aria-hidden="true">📅</span><span>Author visit booked: ${esc(fmt(v.starts_at, viewerTz(), { weekday: 'long', month: 'long', timeZoneName: 'short' }))}</span></div>
+         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">${v.zoom_url ? `<a class="btn sm" href="${esc(v.zoom_url)}">Zoom link</a>` : ''}<a class="btn sm ghost" href="${esc(r.booking_url)}">Reschedule or cancel</a></div>`
+      : v && v.status === 'completed'
+        ? `<div class="unlock yes"><span aria-hidden="true">✓</span><span>Your author visit is complete. Thank you!</span></div>`
+        : `<div class="unlock yes"><span aria-hidden="true">🎉</span><span>Author visit unlocked!</span></div><a class="btn bloom" style="margin-top:12px" href="${esc(r.booking_url)}">Book our author visit</a>`;
+  box.innerHTML = `
+    <span class="eyebrow">Group dashboard · private to you</span>
+    <h1 style="font-size:clamp(2rem,6vw,3.2rem)">${esc(g.name)}</h1>
+    <div class="card" style="margin-top:20px">
+      <h2 style="font-size:1.4rem;margin:0">${n} of ${need} members</h2>
+      <div class="dots" role="img" aria-label="${n} of ${need} members joined">${dots}</div>
+      ${visitHtml}
+    </div>
+    <div class="card" style="margin-top:20px">
+      <h2 style="font-size:1.4rem">Your invite link</h2>
+      <div class="invite"><label class="sr" for="inv">Invite link</label><input id="inv" type="text" readonly value="${esc(r.invite_url)}"><button class="btn" type="button" id="copy">Copy</button></div>
+      <p class="small muted" style="margin:10px 0 0">Each person signs up with their own email. Repeat signups don't count twice.</p>
+      ${DEMO ? `<p class="small" style="margin-top:12px"><b>Demo:</b> <a href="#" id="fill">add sample members</a> to see the unlock, or open the invite link and sign up yourself.</p>` : ''}
+    </div>
+    <div class="card" style="margin-top:20px">
+      <h2 style="font-size:1.4rem">Members</h2>
+      ${r.members.length ? `<div class="scroll-x"><table class="table"><thead><tr><th>Name</th><th>Has the book</th><th>Joined</th></tr></thead><tbody>${r.members.map((m) => `<tr><td>${esc(m.name)}</td><td>${m.purchased ? 'Yes' : 'Not yet'}</td><td>${esc(fmtDate(m.joined, viewerTz()).replace(/^\w+, /, ''))}</td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">No one yet. Share your link!</p>'}
+    </div>
+    <details class="card" style="margin-top:20px">
+      <summary style="cursor:pointer;font-weight:600">Edit group details &amp; schedule</summary>
+      <form id="edit" style="margin-top:18px" novalidate>
+        <div class="field"><label for="g-name">Group name</label><input id="g-name" name="group_name" type="text" value="${esc(g.name)}"></div>
+        <div class="row two">
+          <div class="field"><label for="g-start">Start date</label><input id="g-start" name="start_date" type="date" value="${esc(g.start_date || '')}"></div>
+          <div class="field"><label for="g-end">End date</label><input id="g-end" name="end_date" type="date" value="${esc(g.end_date || '')}"></div>
+        </div>
+        <div class="row three">
+          <div class="field"><label for="g-day">Meeting day</label><select id="g-day" name="meeting_day">${['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'Varies'].map((x) => `<option ${x === (g.meeting_day || '') ? 'selected' : ''} value="${x}">${x || 'Choose…'}</option>`).join('')}</select></div>
+          <div class="field"><label for="g-time">Time</label><input id="g-time" name="meeting_time" type="time" value="${esc(g.meeting_time || '')}"></div>
+          <div class="field"><label for="g-freq">Frequency</label><select id="g-freq" name="frequency">${['', 'Weekly', 'Every 2 weeks', 'Monthly', 'Other'].map((x) => `<option ${x === (g.frequency || '') ? 'selected' : ''} value="${x}">${x || 'Choose…'}</option>`).join('')}</select></div>
+        </div>
+        <div class="field"><label for="g-tz">Time zone</label><select id="g-tz" name="timezone"></select></div>
+        <div class="field"><label for="g-size">Estimated size <span class="opt">(planning only)</span></label><input id="g-size" name="est_size" type="number" min="1" value="${esc(g.est_size || '')}"></div>
+        <button class="btn" type="submit">Save changes</button>
+        <div class="msg" id="e-msg" aria-live="polite"></div>
+      </form>
+    </details>`;
+  fillTz($('#g-tz'), g.timezone);
+  $('#copy').onclick = async () => { try { await navigator.clipboard.writeText(r.invite_url); } catch { $('#inv').select(); document.execCommand('copy'); } $('#copy').textContent = 'Copied ✓'; track('invite_copied'); };
+  $('#fill')?.addEventListener('click', async (e) => { e.preventDefault(); await api('groups/' + t, { method: 'POST', body: { demo_fill: Math.max(1, need - n) } }); load(); });
+  $('#edit').addEventListener('submit', async (e) => {
+    e.preventDefault(); const f = e.currentTarget, d = formData(f), btn = f.querySelector('button');
+    if (d.start_date && d.end_date && d.end_date < d.start_date) return say($('#e-msg'), 'The end date must be after the start date.');
+    busy(btn, true, 'Saving…');
+    try { await api('groups/' + t, { method: 'POST', body: d }); say($('#e-msg'), 'Saved ✓', 'ok'); } catch (err) { say($('#e-msg'), err.message); }
+    busy(btn, false);
+  });
+}
+load();
+
+</script>
+</body>
+</html>

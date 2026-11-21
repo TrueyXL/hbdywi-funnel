@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>You're enrolled · HBDYWI</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#f6f1ea">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght,SOFT@0,9..144,400..600,0..100;1,9..144,400..600,0..100&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 14c-2.6-1.8-3.4-5-2-8.5 1.2.6 2 1.4 2 1.4s.8-.8 2-1.4c1.4 3.5.6 6.7-2 8.5Z' fill='%23b4566e'/%3E%3Cpath d='M16 29V15' stroke='%232f3a2f' stroke-width='2'/%3E%3C/svg%3E">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><div class="wrap"><a class="brand" href="./"><span data-bloom></span><span>The Bloom Project</span></a><a class="btn sm ghost" href="./">Home</a></div></header>
+<main id="main" class="page"><div class="wrap narrow">
+
+<div class="card center stack" id="cs" role="status"><div style="font-size:2.4rem">⏳</div><h1 style="font-size:2rem">Confirming your payment…</h1></div>
+</div></main>
+<footer class="foot"><div class="wrap"><span>© Imani Green · The Bloom Project</span><span><a href="privacy">Privacy</a></span></div></footer>
+<script type="module">
+import { $, $$, fmt, fmtDate, fmtTime, tzName, viewerTz, esc, formData, busy, say, params, header, BLOOM_SVG } from './js/common.js';
+import { api, track, demoBar, DEMO, amazonHref } from './js/api.js';
+demoBar(); header(); $$('[data-bloom]').forEach((el) => (el.outerHTML = BLOOM_SVG));
+
+const sid = params.get('session_id');
+async function poll(n = 0) {
+  try {
+    const r = await api('cohort/status?session_id=' + encodeURIComponent(sid || 'demo'));
+    if (r.status === 'paid') {
+      $('#cs').innerHTML = `<div style="font-size:2.4rem">🌸</div><h1 style="font-size:2rem">You're enrolled!</h1>
+        <p>Welcome to the <b>${esc(r.cohort.name)}</b>, starting ${esc(fmtDate(r.cohort.starts_at, viewerTz()))}.</p>
+        <p class="muted">Your payment confirmation and welcome email are on the way. Your workbook and meeting link arrive before we start.</p>
+        <p>The book is a separate purchase. <a target="_blank" rel="noopener" href="${amazonHref('paperback', 'cohort_success')}">Get Volume One on Amazon →</a></p>`;
+      return;
+    }
+  } catch {}
+  if (n < 15) setTimeout(() => poll(n + 1), 2000);
+  else $('#cs').innerHTML = '<h1 style="font-size:2rem">Payment received</h1><p class="muted">Your confirmation email will arrive shortly. If not, reply to any of our emails and we will sort it out.</p>';
+}
+poll();
+
+</script>
+</body>
+</html>

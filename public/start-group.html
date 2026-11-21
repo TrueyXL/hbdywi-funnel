@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Start a reading group · HBDYWI</title>
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#f6f1ea">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght,SOFT@0,9..144,400..600,0..100;1,9..144,400..600,0..100&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 14c-2.6-1.8-3.4-5-2-8.5 1.2.6 2 1.4 2 1.4s.8-.8 2-1.4c1.4 3.5.6 6.7-2 8.5Z' fill='%23b4566e'/%3E%3Cpath d='M16 29V15' stroke='%232f3a2f' stroke-width='2'/%3E%3C/svg%3E">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><div class="wrap"><a class="brand" href="./"><span data-bloom></span><span>The Bloom Project</span></a><a class="btn sm ghost" href="./">Home</a></div></header>
+<main id="main" class="page"><div class="wrap narrow">
+
+<span class="eyebrow">Pathway 04 · Group leaders</span>
+<h1 style="font-size:clamp(2rem,6vw,3.2rem)">Start your reading group</h1>
+<p class="lede">Register once and get a unique invite link for your members. When <b>5 people</b> join through it, your group unlocks a free 30-minute virtual visit with Imani.</p>
+<form class="card" id="g-form" style="margin-top:28px" novalidate>
+  <div class="row two">
+    <div class="field"><label for="g-first">Your first name</label><input id="g-first" name="first_name" type="text" autocomplete="given-name" required></div>
+    <div class="field"><label for="g-last">Last name</label><input id="g-last" name="last_name" type="text" autocomplete="family-name"></div>
+  </div>
+  <div class="field"><label for="g-email">Email</label><input id="g-email" name="email" type="email" autocomplete="email" inputmode="email" required></div>
+  <div class="field"><label for="g-name">Group name</label><input id="g-name" name="group_name" type="text" placeholder="e.g. Sunday Sisters Book Club" required></div>
+
+<div class="row two">
+  <div class="field"><label for="g-start">Planned start date</label><input id="g-start" name="start_date" type="date"></div>
+  <div class="field"><label for="g-end">Planned end date</label><input id="g-end" name="end_date" type="date"></div>
+</div>
+<div class="row three">
+  <div class="field"><label for="g-day">Meeting day</label><select id="g-day" name="meeting_day"><option value="">Choose…</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option><option>Varies</option></select></div>
+  <div class="field"><label for="g-time">Time</label><input id="g-time" name="meeting_time" type="time"></div>
+  <div class="field"><label for="g-freq">Frequency</label><select id="g-freq" name="frequency"><option value="">Choose…</option><option>Weekly</option><option>Every 2 weeks</option><option>Monthly</option><option>Other</option></select></div>
+</div>
+<div class="field"><label for="g-tz">Time zone</label><select id="g-tz" name="timezone"></select></div>
+<div class="field"><label for="g-size">Estimated group size <span class="opt">(optional, for planning only)</span></label><input id="g-size" name="est_size" type="number" min="1" max="500" inputmode="numeric"></div>
+
+  <div class="field"><label class="check"><input type="checkbox" name="opt_in"> <span>Send me updates about the book, cohorts and The Bloom Project. <span class="muted">(optional)</span></span></label></div>
+  <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <button class="btn bloom block" type="submit">Create my group + invite link</button>
+  <p class="small muted" style="margin:10px 0 0">You can update dates and schedule anytime from your dashboard. It won't create a second group.</p>
+  <div class="msg" id="g-msg" aria-live="polite"></div>
+</form>
+<div id="g-done" class="card hidden" style="margin-top:28px" role="status"></div>
+</div></main>
+<footer class="foot"><div class="wrap"><span>© Imani Green · The Bloom Project</span><span><a href="privacy">Privacy</a></span></div></footer>
+<script type="module">
+import { $, $$, fmt, fmtDate, fmtTime, tzName, viewerTz, esc, formData, busy, say, params, header, BLOOM_SVG } from './js/common.js';
+import { api, track, demoBar, DEMO, amazonHref } from './js/api.js';
+demoBar(); header(); $$('[data-bloom]').forEach((el) => (el.outerHTML = BLOOM_SVG));
+
+const TZS = ['America/Los_Angeles','America/Denver','America/Phoenix','America/Chicago','America/New_York','America/Toronto','America/Halifax','America/Anchorage','Pacific/Honolulu','Europe/London','Europe/Paris','Africa/Lagos','Africa/Johannesburg','Asia/Dubai','Asia/Kolkata','Asia/Singapore','Australia/Sydney'];
+function fillTz(sel, current) { const v = current || viewerTz(); const list = TZS.includes(v) ? TZS : [v, ...TZS];
+  sel.innerHTML = list.map((t) => `<option value="${t}" ${t === v ? 'selected' : ''}>${t.replace(/_/g, ' ')} (${tzName(t)})</option>`).join(''); }
+
+fillTz($('#g-tz'));
+track('page_view');
+$('#g-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const f = e.currentTarget, btn = f.querySelector('button[type=submit]'), msg = $('#g-msg'), d = formData(f);
+  if (!d.first_name?.trim() || !f.email.checkValidity() || !d.group_name?.trim()) return say(msg, 'Please enter your name, a valid email and a group name.');
+  if (d.start_date && d.end_date && d.end_date < d.start_date) return say(msg, 'The end date must be after the start date.');
+  busy(btn, true, 'Creating your group…'); say(msg, '');
+  try {
+    const r = await api('groups/create', { method: 'POST', body: d });
+    f.classList.add('hidden');
+    const done = $('#g-done'); done.classList.remove('hidden');
+    done.innerHTML = `<div style="font-size:2.2rem">🌿</div><h2>${esc(d.group_name)} is ready</h2>
+      <p>Share this link with your members. We also emailed it to <b>${esc(d.email)}</b>.</p>
+      <div class="invite"><label class="sr" for="inv">Invite link</label><input id="inv" type="text" readonly value="${esc(r.invite_url)}"><button class="btn" type="button" id="copy">Copy link</button></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0">
+        <a class="btn sm ghost" href="sms:?&body=${encodeURIComponent('Join our reading group "' + d.group_name + '": ' + r.invite_url)}">Share by text</a>
+        <a class="btn sm ghost" href="mailto:?subject=${encodeURIComponent('Join ' + d.group_name)}&body=${encodeURIComponent('Join our reading group here: ' + r.invite_url)}">Share by email</a>
+        <button class="btn sm ghost hidden" type="button" id="share">Share…</button>
+      </div>
+      <a class="btn bloom" href="${esc(r.dashboard_url)}">Open my group dashboard</a>
+      <p class="small muted" style="margin-top:12px">Bookmark your dashboard. That link is private to you.</p>`;
+    $('#copy').onclick = async () => { try { await navigator.clipboard.writeText(r.invite_url); } catch { $('#inv').select(); document.execCommand('copy'); } $('#copy').textContent = 'Copied ✓'; track('invite_copied'); };
+    if (navigator.share) { const s = $('#share'); s.classList.remove('hidden'); s.onclick = () => navigator.share({ title: d.group_name, text: 'Join our reading group', url: r.invite_url }).then(() => track('invite_shared')).catch(() => {}); }
+    done.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (err) { busy(btn, false); say(msg, err.message); }
+});
+
+</script>
+</body>
+</html>

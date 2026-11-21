@@ -1,0 +1,10 @@
+# Cloudflare Pages project (site + /functions API). Deploy: npx wrangler pages deploy public
+name = "hbdywi-funnel"
+pages_build_output_dir = "public"
+compatibility_date = "2026-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+SITE_URL = "https://{{DOMAIN}}"
+# Secrets are NOT stored here. Set them with:  npx wrangler pages secret put NAME
+# (see .dev.vars.example for the full list)

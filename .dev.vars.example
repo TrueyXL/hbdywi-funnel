@@ -1,0 +1,32 @@
+# Copy to .dev.vars for local dev (npx wrangler pages dev). In production set each with:
+#   npx wrangler pages secret put NAME --project-name hbdywi-funnel
+# NEVER commit real values.
+
+# --- Site ---
+SITE_URL=http://localhost:8788
+ADMIN_PASSWORD=change-me-long-random          # admin.html sign-in
+CRON_SECRET=change-me-long-random             # same value in cron-worker secret
+CALENDAR_FEED_TOKEN=change-me-long-random     # Imani subscribes to /api/calendar/<token>.ics
+
+# --- Supabase (Project Settings → API) ---
+SUPABASE_URL=https://xxxxxxxx.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=eyJ...              # server only, never in the browser
+
+# --- Resend (resend.com → API Keys; verify the sending domain first) ---
+RESEND_API_KEY=re_...
+EMAIL_FROM=Imani Green <hello@{{DOMAIN}}>
+
+# --- Stripe (Developers → API keys / Webhooks) ---
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# --- Zoom Server-to-Server OAuth app (optional; without it a fixed Zoom link is used) ---
+ZOOM_ACCOUNT_ID=
+ZOOM_CLIENT_ID=
+ZOOM_CLIENT_SECRET=
+ZOOM_USER=me                                  # or Imani's Zoom email
+
+# --- Optional ---
+AUTHOR_EMAIL=                                 # overrides settings.visit.author_email
+AMAZON_FALLBACK_URL=
+CRON_BATCH=15                                 # emails per tick (Workers free = 50 subrequests)

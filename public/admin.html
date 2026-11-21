@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Funnel Admin · HBDYWI</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+<style>
+  .tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 20px; }
+  .tabs button { flex: none; border: 1.5px solid var(--line); background: var(--card); border-radius: 999px; padding: 9px 16px; font: 600 .9rem var(--sans); color: var(--ink-2); cursor: pointer; }
+  .tabs button[aria-selected="true"] { background: var(--forest); color: var(--paper); border-color: var(--forest); }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .kpi b { display: block; font-family: var(--serif); font-size: 1.9rem; font-weight: 500; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .kpi span { font-size: .8rem; color: var(--muted); }
+  .panel { display: none; } .panel.on { display: block; }
+  .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin: 0 0 14px; }
+  .bar h2 { margin: 0; font-size: 1.5rem; }
+  .table td .btn { min-height: 34px; padding: 6px 12px; font-size: .82rem; }
+  .tpl { border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 12px; background: var(--card); }
+  .tpl summary { cursor: pointer; font-weight: 600; }
+  code { font-size: .85em; background: var(--paper-2); padding: 1px 6px; border-radius: 6px; }
+</style>
+</head>
+<body>
+<main id="main" class="page" style="padding-top:28px"><div class="wrap">
+  <div id="login" class="card narrow" style="margin:40px auto">
+    <h1 style="font-size:2rem">Funnel admin</h1>
+    <form id="login-form"><div class="field"><label for="pw">Admin password</label><input id="pw" type="password" autocomplete="current-password" required></div>
+      <button class="btn block" type="submit">Sign in</button><div class="msg" id="login-msg"></div></form>
+  </div>
+
+  <div id="app" class="hidden">
+    <div class="bar"><h1 style="font-size:1.8rem;margin:0">Funnel admin</h1><button class="btn sm ghost" id="logout" type="button">Sign out</button></div>
+    <div class="tabs" role="tablist">
+      <button role="tab" data-tab="overview" aria-selected="true">Overview</button>
+      <button role="tab" data-tab="activation">Activation</button>
+      <button role="tab" data-tab="cohorts">Cohorts</button>
+      <button role="tab" data-tab="groups">Groups</button>
+      <button role="tab" data-tab="visits">Author visits</button>
+      <button role="tab" data-tab="emails">Emails</button>
+      <button role="tab" data-tab="settings">Book &amp; settings</button>
+      <button role="tab" data-tab="data">Exports &amp; outbox</button>
+    </div>
+
+    <section class="panel on" id="p-overview">
+      <div class="bar"><h2>Last <select id="days" style="width:auto;min-height:36px;padding:4px 10px;display:inline-block"><option>7</option><option selected>30</option><option>90</option><option>365</option></select> days</h2></div>
+      <div class="kpis" id="kpis"></div>
+      <p class="small muted" style="margin-top:14px" id="email-health"></p>
+    </section>
+
+    <section class="panel" id="p-activation">
+      <div class="bar"><h2>Activation sessions</h2></div>
+      <p class="small muted">Sessions are created automatically from the schedule in <b>Book &amp; settings</b>. Cancel a date here (registrants are emailed). Change a time and everyone gets updated details.</p>
+      <div class="scroll-x"><table class="table" id="sessions"></table></div>
+      <details class="card" style="margin-top:16px"><summary style="cursor:pointer;font-weight:600">Add a one-off session</summary>
+        <form id="new-session" style="margin-top:14px"><div class="row three">
+          <div class="field"><label>Date &amp; time (your device time)</label><input type="datetime-local" name="starts_at" required></div>
+          <div class="field"><label>Zoom link <span class="opt">(blank = default)</span></label><input type="text" name="zoom_url"></div>
+          <div class="field"><label>Seat limit <span class="opt">(blank = none)</span></label><input type="number" name="capacity" min="1"></div>
+        </div><button class="btn sm" type="submit">Add session</button></form></details>
+      <div id="regs" style="margin-top:16px"></div>
+    </section>
+
+    <section class="panel" id="p-cohorts">
+      <div class="bar"><h2>Cohorts</h2><button class="btn sm" id="new-cohort" type="button">New cohort</button></div>
+      <div class="scroll-x"><table class="table" id="cohorts"></table></div>
+      <form class="card hidden" id="cohort-form" style="margin-top:16px">
+        <h3 id="cohort-form-h">New cohort</h3>
+        <input type="hidden" name="id">
+        <div class="row two">
+          <div class="field"><label>Name</label><input type="text" name="name" required placeholder="January 2027 Cohort"></div>
+          <div class="field"><label>Status</label><select name="status"><option value="open">Open (taking payments)</option><option value="closed">Closed (shows waitlist)</option><option value="draft">Draft (hidden)</option><option value="completed">Completed</option></select></div>
+        </div>
+        <div class="row three">
+          <div class="field"><label>Price (USD)</label><input type="number" name="price" min="1" step="0.01" value="72"></div>
+          <div class="field"><label>Seats</label><input type="number" name="capacity" min="1" value="20"></div>
+          <div class="field"><label>Time zone</label><input type="text" name="timezone" value="America/Los_Angeles"></div>
+        </div>
+        <div class="field"><label>Meeting dates &amp; times <span class="opt">(one per line, YYYY-MM-DD HH:MM in the cohort time zone)</span></label><textarea name="meetings" placeholder="2027-01-12 18:00&#10;2027-01-19 18:00"></textarea></div>
+        <div class="row two">
+          <div class="field"><label>Meeting length (min)</label><input type="number" name="meeting_minutes" value="60"></div>
+          <div class="field"><label>Schedule summary shown to readers</label><input type="text" name="schedule_text" placeholder="Tuesdays · 6 PM Pacific · 6 weeks"></div>
+        </div>
+        <div class="row two">
+          <div class="field"><label>Zoom link</label><input type="text" name="zoom_url"></div>
+          <div class="field"><label>Workbook link (PDF / Drive)</label><input type="text" name="workbook_url"></div>
+        </div>
+        <div class="field"><label>Instructions (sent with materials)</label><textarea name="instructions" style="font-family:var(--sans);font-size:1rem"></textarea></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" type="submit">Save cohort</button><button class="btn ghost" type="button" id="cohort-cancel">Close</button></div>
+        <div class="msg" id="cohort-msg"></div>
+      </form>
+      <div id="enrolls" style="margin-top:16px"></div>
+    </section>
+
+    <section class="panel" id="p-groups">
+      <div class="bar"><h2>Groups</h2><input type="text" id="gsearch" placeholder="Search groups or leaders" style="max-width:280px"></div>
+      <div class="scroll-x"><table class="table" id="groups"></table></div>
+      <div id="group-detail" style="margin-top:16px"></div>
+    </section>
+
+    <section class="panel" id="p-visits">
+      <div class="bar"><h2>Author visits</h2></div>
+      <div class="scroll-x"><table class="table" id="visits"></table></div>
+      <div class="card" style="margin-top:16px">
+        <h3>Availability</h3>
+        <form id="avail">
+          <div class="field"><label>Weekly hours <span class="opt">(in Imani's time zone, one day per line, e.g. <code>Mon 10:00-12:00, 14:00-16:00</code>)</span></label><textarea name="weekly" style="min-height:150px"></textarea></div>
+          <div class="row three">
+            <div class="field"><label>Imani's time zone</label><input type="text" name="timezone"></div>
+            <div class="field"><label>Minimum notice (hours)</label><input type="number" name="min_notice_hours" min="0"></div>
+            <div class="field"><label>Booking window (days ahead)</label><input type="number" name="window_days" min="1"></div>
+          </div>
+          <div class="row three">
+            <div class="field"><label>Buffer between visits (min)</label><input type="number" name="buffer_min" min="0"></div>
+            <div class="field"><label>Max visits per week</label><input type="number" name="max_per_week" min="1"></div>
+            <div class="field"><label>Members needed to unlock</label><input type="number" name="threshold" min="1"></div>
+          </div>
+          <div class="row two">
+            <div class="field"><label>Fallback Zoom link <span class="opt">(if Zoom API not connected)</span></label><input type="text" name="fallback_zoom_url"></div>
+            <div class="field"><label>Imani's notification email</label><input type="email" name="author_email"></div>
+          </div>
+          <button class="btn" type="submit">Save availability</button><div class="msg" id="avail-msg"></div>
+        </form>
+        <h3 style="margin-top:24px">Days off</h3>
+        <form id="blackout" style="display:flex;gap:10px;flex-wrap:wrap"><input type="date" name="day" required style="max-width:200px"><input type="text" name="note" placeholder="Note (optional)" style="max-width:260px"><button class="btn sm" type="submit">Block day</button></form>
+        <ul id="blackouts" class="small" style="padding-left:18px"></ul>
+      </div>
+    </section>
+
+    <section class="panel" id="p-emails">
+      <div class="bar"><h2>Email copy</h2>
+        <form id="test" style="display:flex;gap:8px;flex-wrap:wrap"><input type="email" name="to" placeholder="Send a test to…" required style="max-width:240px"><select name="template" id="test-tpl" style="max-width:260px"></select><button class="btn sm" type="submit">Send test</button></form></div>
+      <p class="small muted">Use <code>{{first_name}}</code>-style placeholders, <code>**bold**</code>, <code>[[Button text|{{link}}]]</code> on its own line, and <code>{{#if x}}…{{/if}}</code>. Blank line = new paragraph.</p>
+      <div id="templates"></div>
+    </section>
+
+    <section class="panel" id="p-settings">
+      <div class="bar"><h2>Book &amp; settings</h2></div>
+      <form class="card" id="book-form">
+        <h3>Current book</h3><input type="hidden" name="id">
+        <div class="row two"><div class="field"><label>Title</label><input type="text" name="title"></div><div class="field"><label>Subtitle</label><input type="text" name="subtitle"></div></div>
+        <div class="field"><label>One-line promise</label><input type="text" name="promise"></div>
+        <div class="field"><label>Cover image URL</label><input type="text" name="cover_url"></div>
+        <div class="row three">
+          <div class="field"><label>Amazon paperback</label><input type="text" name="paperback"></div>
+          <div class="field"><label>Amazon Kindle</label><input type="text" name="kindle"></div>
+          <div class="field"><label>Amazon hardcover <span class="opt">(optional)</span></label><input type="text" name="hardcover"></div>
+        </div>
+        <button class="btn" type="submit">Save book</button><div class="msg" id="book-msg"></div>
+      </form>
+      <form class="card" id="act-form" style="margin-top:16px">
+        <h3>Activation schedule</h3>
+        <div class="row three">
+          <div class="field"><label>Weekday</label><select name="weekday"><option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option></select></div>
+          <div class="field"><label>Which weeks <span class="opt">(e.g. 2,4; -1 = last)</span></label><input type="text" name="nth"></div>
+          <div class="field"><label>Time (24h)</label><input type="time" name="time"></div>
+        </div>
+        <div class="row three">
+          <div class="field"><label>Time zone</label><input type="text" name="timezone"></div>
+          <div class="field"><label>Default Zoom link</label><input type="text" name="default_zoom_url"></div>
+          <div class="field"><label>Seat limit <span class="opt">(blank = none)</span></label><input type="number" name="capacity" min="1"></div>
+        </div>
+        <label class="check"><input type="checkbox" name="enabled"> <span>Show activation sign-ups on the site</span></label>
+        <button class="btn" type="submit" style="margin-top:12px">Save schedule</button><div class="msg" id="act-msg"></div>
+      </form>
+      <form class="card" id="site-form" style="margin-top:16px">
+        <h3>Site &amp; sender</h3>
+        <div class="row two"><div class="field"><label>Author name</label><input type="text" name="author"></div><div class="field"><label>Brand</label><input type="text" name="brand"></div></div>
+        <div class="row two"><div class="field"><label>Email sender name</label><input type="text" name="sender_name"></div><div class="field"><label>Reply-to email</label><input type="email" name="reply_to"></div></div>
+        <div class="field"><label>Updates list name</label><input type="text" name="updates_list_name"></div>
+        <div class="field"><label>Testimonials <span class="opt">(one per line: quote | name)</span></label><textarea name="testimonials" style="font-family:var(--sans);font-size:1rem"></textarea></div>
+        <label class="check"><input type="checkbox" name="cohort_enabled"> <span>Cohort enrollment on (off = everyone sees the waitlist)</span></label>
+        <button class="btn" type="submit" style="margin-top:12px">Save</button><div class="msg" id="site-msg"></div>
+      </form>
+    </section>
+
+    <section class="panel" id="p-data">
+      <div class="bar"><h2>Exports</h2></div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px" id="exports"></div>
+      <div class="bar" style="margin-top:28px"><h2>Email outbox</h2><div style="display:flex;gap:8px"><select id="ob-status" style="width:auto;min-height:38px"><option value="">All</option><option>pending</option><option>sent</option><option>failed</option><option>skipped</option><option>cancelled</option></select><button class="btn sm" id="ob-run" type="button">Send due now</button></div></div>
+      <div class="scroll-x"><table class="table" id="outbox"></table></div>
+    </section>
+  </div>
+</div></main>
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>
