@@ -39,7 +39,8 @@ function render() {
   const booked = v?.status === 'booked';
   const zones = [...new Set([viewerTz(), s.group.timezone, s.author_timezone])];
   const byDay = {};
-  for (const iso of s.slots) { const k = fmtDate(iso, shownTz); (byDay[k] ||= []).push(iso); }
+  const mine = booked ? new Date(v.starts_at).toISOString() : null;
+  for (const iso of s.slots) { if (iso === mine) continue; const k = fmtDate(iso, shownTz); (byDay[k] ||= []).push(iso); }
   box.innerHTML = head + `
     ${booked ? `<div class="card" style="margin-bottom:20px"><div class="unlock yes"><span aria-hidden="true">📅</span><span>Booked: ${esc(fmt(v.starts_at, shownTz, { weekday: 'long', month: 'long', timeZoneName: 'short' }))}</span></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">${v.zoom_url ? `<a class="btn sm" href="${esc(v.zoom_url)}">Zoom link</a>` : ''}<button class="btn sm ghost" id="cancel" type="button">Cancel visit</button></div>
