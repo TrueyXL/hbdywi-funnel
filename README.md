@@ -163,3 +163,11 @@ Run on desktop Chrome/Safari **and** a phone (iOS Safari + Android Chrome). Use 
 - Prices in USD; English only; activation host timezone and Imani's visit timezone are `America/Los_Angeles`.
 - Visit availability placeholder: Mon–Thu 10:00–16:00 PT, 48h notice, 60-day window, max 3/week, 15-min buffer.
 - All `{{PLACEHOLDER}}` values (title, Amazon URLs, Zoom links, domain, emails, bio, privacy text) are editable in Admin or listed in `supabase/schema.sql` seeds / `privacy.html` / `index.html` bio.
+
+## Updating the GitHub demo
+
+The demo is served from the `gh-pages` branch (the contents of `public/`):
+
+```
+npm test && git subtree push --prefix public origin gh-pages
+```
