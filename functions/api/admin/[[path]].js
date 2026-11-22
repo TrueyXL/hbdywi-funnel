@@ -89,11 +89,11 @@ export async function onRequest(context) {
   if (a === 'groups' && m === 'GET' && !b) return json(await client.select('group_overview', 'select=*&order=created_at.desc'));
   if (a === 'groups' && m === 'GET' && b) {
     const g = await client.one('group_overview', `select=*&id=${eq(b)}`);
-    const members = await client.select('group_members', `select=first_name,last_name,email,purchased,created_at,updated_at&group_id=${eq(b)}&order=created_at.asc`);
+    const members = await client.select('group_members', `select=first_name,last_name,email,purchased,purchased_volume,created_at,updated_at&group_id=${eq(b)}&order=created_at.asc`);
     return json({ ...g, members, ...groupLinks(env, g) });
   }
   if (a === 'groups' && m === 'PATCH' && b) {
-    const allowed = ['name', 'start_date', 'end_date', 'meeting_day', 'meeting_time', 'frequency', 'timezone', 'est_size'];
+    const allowed = ['name', 'start_date', 'end_date', 'meeting_day', 'meeting_time', 'frequency', 'timezone', 'est_size', 'goal'];
     const patch = Object.fromEntries(Object.entries(body).filter(([k]) => allowed.includes(k)));
     return json((await client.update('groups', `id=${eq(b)}`, { ...patch, updated_at: now }))[0]);
   }

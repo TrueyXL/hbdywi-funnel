@@ -158,7 +158,7 @@ export async function visitEmails(context, client, { visit, group, leader, chang
   if (authorEmail && !authorEmail.includes('{{')) {
     rows.push({ key: `visit:${v.id}:author:${change}:${seq}`, to: authorEmail, template: 'visit_author_notify', immediate: true,
       ref_type: change === 'cancelled' ? 'group' : 'visit', ref_id: change === 'cancelled' ? group.id : v.id,
-      data: { change, group_name: group.name, member_count: group.member_count, leader_name: `${leader.first_name || ''} ${leader.last_name || ''}`.trim(),
+      data: { change, group_name: group.name, group_goal: group.goal || '', member_count: group.member_count, leader_name: `${leader.first_name || ''} ${leader.last_name || ''}`.trim(),
               leader_email: leader.email, tz: settings.visit.timezone, previous_starts_at: previousStartsAt,
               ...(change === 'cancelled' ? { starts_at: previousStartsAt, zoom_url: v.zoom_join_url } : {}),
               ics: { ...ics, method: change === 'cancelled' ? 'CANCEL' : 'REQUEST', status: change === 'cancelled' ? 'CANCELLED' : 'CONFIRMED' } } });

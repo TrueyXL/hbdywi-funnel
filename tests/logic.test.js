@@ -83,3 +83,27 @@ test('Stripe signature verification', async () => {
   await assert.rejects(verifyWebhook(body, `t=${t},v1=deadbeef`, secret));
   await assert.rejects(verifyWebhook(body, `t=${t - 1000},v1=${sig}`, secret));
 });
+
+test('Google Calendar busy blocks (plus buffer) remove visit slots', () => {
+  const cfg = { timezone: 'America/Los_Angeles', duration_min: 30, buffer_min: 15, min_notice_hours: 0, window_days: 7, max_per_week: 10,
+    weekly: { 1: [['10:00', '12:15']] } }; // Monday 10:00, 10:45, 11:30
+  const now = new Date('2027-01-01T12:00:00Z');
+  const free = visitSlots(cfg, [], [], now);
+  assert.deepEqual(free.filter((s) => s.startsWith('2027-01-04')), ['2027-01-04T18:00:00.000Z', '2027-01-04T18:45:00.000Z', '2027-01-04T19:30:00.000Z']);
+  // Imani blocks 10:30-11:00 PT in Google → 10:00 (ends 10:30, buffer 15) and 10:45 clash; 11:30 is outside 11:00+15
+  const busy = [{ start: '2027-01-04T18:30:00Z', end: '2027-01-04T19:00:00Z' }];
+  assert.deepEqual(visitSlots(cfg, [], [], now, busy).filter((s) => s.startsWith('2027-01-04')), ['2027-01-04T19:30:00.000Z']);
+  // all-day block wipes the day; junk entries are ignored
+  const allDay = [{ start: '2027-01-04T08:00:00Z', end: '2027-01-05T08:00:00Z' }, { start: 'x', end: 'y' }];
+  assert.equal(visitSlots(cfg, [], [], now, allDay).filter((s) => s.startsWith('2027-01-04')).length, 0);
+});
+
+test('v2 defaults: Activation at 6 PM Pacific, brand renamed, Accountability Circle copy', () => {
+  assert.equal(DEFAULT_SETTINGS.activation.rule.time, '18:00');
+  const d = activationDates(DEFAULT_SETTINGS.activation.rule, 'America/Los_Angeles', new Date('2027-01-02T12:00:00Z'), 1);
+  assert.equal(d[0].toISOString(), '2027-01-14T02:00:00.000Z'); // Wed Jan 13 2027 18:00 PST
+  assert.equal(DEFAULT_SETTINGS.site.brand, 'How Bad Do You Want It?');
+  const all = JSON.stringify(TEMPLATES);
+  assert.ok(!/Bloom Project|reading group/i.test(all), 'no old brand / reading-group wording in emails');
+  assert.ok(TEMPLATES.group_links && TEMPLATES.visit_author_notify.body.includes('group_goal'));
+});

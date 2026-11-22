@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Privacy · HBDYWI</title>
+<title>Privacy · How Bad Do You Want It?</title>
 <meta name="robots" content="index,follow">
 <meta name="theme-color" content="#f6f1ea">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,24 +13,24 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<header class="top"><div class="wrap"><a class="brand" href="./"><span data-bloom></span><span>The Bloom Project</span></a><a class="btn sm ghost" href="./">Home</a></div></header>
+<header class="top"><div class="wrap"><a class="brand" href="./"><span data-bloom></span><span data-bind="brand">How Bad Do You Want It?</span></a><a class="btn sm ghost" href="./">Home</a></div></header>
 <main id="main" class="page"><div class="wrap narrow">
 
 <h1 style="font-size:clamp(2rem,6vw,3rem)">Privacy</h1>
 <div class="stack" style="color:var(--ink-2)">
 <p><b>{{PLACEHOLDER: replace with the client's privacy policy.}}</b></p>
 <p>We collect the information you give us (name, email, group details, your answer about purchasing Volume One) to run the sessions, cohorts and groups you sign up for, and to send the emails those require.</p>
-<p>We only send book, cohort and Bloom Project updates if you tick the separate opt-in box. Joining a group never subscribes you to promotional email. Every follow-up email includes an unsubscribe link.</p>
+<p>We only send book, cohort and How Bad Do You Want It? updates if you tick the separate opt-in box. Joining a group never subscribes you to promotional email. Every follow-up email includes an unsubscribe link.</p>
 <p>Payments are processed by Stripe; we never see your card number. Emails are sent with Resend, data is stored with Supabase, and live sessions run on Zoom.</p>
 <p>We count Amazon link clicks to understand interest. A click is not treated as proof of purchase. Site analytics are first-party and anonymous.</p>
 <p>To access or delete your data, contact {{REPLY_TO_EMAIL}}.</p>
 </div>
 </div></main>
-<footer class="foot"><div class="wrap"><span>© Imani Green · The Bloom Project</span><span><a href="privacy">Privacy</a></span></div></footer>
+<footer class="foot"><div class="wrap"><span>© Imani Green · <span data-bind="brand">How Bad Do You Want It?</span></span><span><a href="privacy">Privacy</a></span></div></footer>
 <script type="module">
 import { $, $$, fmt, fmtDate, fmtTime, tzName, viewerTz, esc, formData, busy, say, params, header, BLOOM_SVG } from './js/common.js';
-import { api, track, demoBar, DEMO, amazonHref } from './js/api.js';
-demoBar(); header(); $$('[data-bloom]').forEach((el) => (el.outerHTML = BLOOM_SVG));
+import { api, track, demoBar, DEMO, amazonHref, loadSite } from './js/api.js';
+demoBar(); header(); $$('[data-bloom]').forEach((el) => (el.outerHTML = BLOOM_SVG)); loadSite();
 
 </script>
 </body>

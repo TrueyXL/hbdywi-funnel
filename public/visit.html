@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Book your author visit · HBDYWI</title>
+<title>Book your author visit · How Bad Do You Want It?</title>
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#f6f1ea">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,16 +13,16 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<header class="top"><div class="wrap"><a class="brand" href="./"><span data-bloom></span><span>The Bloom Project</span></a><a class="btn sm ghost" href="./">Home</a></div></header>
+<header class="top"><div class="wrap"><a class="brand" href="./"><span data-bloom></span><span data-bind="brand">How Bad Do You Want It?</span></a><a class="btn sm ghost" href="./">Home</a></div></header>
 <main id="main" class="page"><div class="wrap narrow">
 
 <div id="vb"><p class="muted">Loading availability…</p></div>
 </div></main>
-<footer class="foot"><div class="wrap"><span>© Imani Green · The Bloom Project</span><span><a href="privacy">Privacy</a></span></div></footer>
+<footer class="foot"><div class="wrap"><span>© Imani Green · <span data-bind="brand">How Bad Do You Want It?</span></span><span><a href="privacy">Privacy</a></span></div></footer>
 <script type="module">
 import { $, $$, fmt, fmtDate, fmtTime, tzName, viewerTz, esc, formData, busy, say, params, header, BLOOM_SVG } from './js/common.js';
-import { api, track, demoBar, DEMO, amazonHref } from './js/api.js';
-demoBar(); header(); $$('[data-bloom]').forEach((el) => (el.outerHTML = BLOOM_SVG));
+import { api, track, demoBar, DEMO, amazonHref, loadSite } from './js/api.js';
+demoBar(); header(); $$('[data-bloom]').forEach((el) => (el.outerHTML = BLOOM_SVG)); loadSite();
 
 const t = params.get('t');
 let state = null, shownTz = viewerTz(), picked = null;
@@ -34,8 +34,8 @@ async function load() {
 function render() {
   const box = $('#vb'), s = state, v = s.visit;
   const head = `<span class="eyebrow">${esc(s.group.name)} · complimentary 30-minute visit</span><h1 style="font-size:clamp(2rem,6vw,3.2rem)">Book your author visit</h1>`;
-  if (!s.eligible) { box.innerHTML = head + `<div class="card"><p>Your group unlocks the visit once <b>${s.threshold}</b> members have joined. You're at <b>${s.group.member_count}</b>.</p></div>`; return; }
-  if (v?.status === 'completed') { box.innerHTML = head + '<div class="card"><p>Your group has already had its complimentary visit. Thank you!</p></div>'; return; }
+  if (!s.eligible) { box.innerHTML = head + `<div class="card"><p>Your circle unlocks the visit once <b>${s.threshold}</b> members have joined. You're at <b>${s.group.member_count}</b>.</p></div>`; return; }
+  if (v?.status === 'completed') { box.innerHTML = head + '<div class="card"><p>Your circle has already had its complimentary visit. Thank you!</p></div>'; return; }
   const booked = v?.status === 'booked';
   const zones = [...new Set([viewerTz(), s.group.timezone, s.author_timezone])];
   const byDay = {};
@@ -44,16 +44,16 @@ function render() {
   box.innerHTML = head + `
     ${booked ? `<div class="card" style="margin-bottom:20px"><div class="unlock yes"><span aria-hidden="true">📅</span><span>Booked: ${esc(fmt(v.starts_at, shownTz, { weekday: 'long', month: 'long', timeZoneName: 'short' }))}</span></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">${v.zoom_url ? `<a class="btn sm" href="${esc(v.zoom_url)}">Zoom link</a>` : ''}<button class="btn sm ghost" id="cancel" type="button">Cancel visit</button></div>
-      <p class="small muted" style="margin:12px 0 0">To reschedule, choose a new time below. Your group keeps its single visit.</p></div>` : ''}
+      <p class="small muted" style="margin:12px 0 0">To reschedule, choose a new time below. Your circle keeps its single visit.</p></div>` : ''}
     <div class="card">
-      <div class="field"><label for="tzsel">Show times in</label><select id="tzsel">${zones.map((z) => `<option value="${z}" ${z === shownTz ? 'selected' : ''}>${z.replace(/_/g, ' ')} · ${tzName(z)}${z === viewerTz() ? ' (your device)' : z === s.group.timezone ? ' (your group)' : " (Imani's)"}</option>`).join('')}</select></div>
+      <div class="field"><label for="tzsel">Show times in</label><select id="tzsel">${zones.map((z) => `<option value="${z}" ${z === shownTz ? 'selected' : ''}>${z.replace(/_/g, ' ')} · ${tzName(z)}${z === viewerTz() ? ' (your device)' : z === s.group.timezone ? ' (your circle)' : " (the author's)"}</option>`).join('')}</select></div>
       ${s.slots.length ? `<div class="days">${Object.entries(byDay).map(([day, list]) => `<div class="day"><h3>${esc(day)}</h3><div class="times">${list.map((iso) => `<button type="button" data-iso="${iso}" aria-pressed="${iso === picked}">${esc(fmtTime(iso, shownTz))}</button>`).join('')}</div></div>`).join('')}</div>`
-        : '<p class="muted">No open times right now. Please check back soon.</p>'}
+        : s.calendar_error ? '<p class="msg err">We couldn\'t load the author\'s calendar just now. Please refresh in a few minutes.</p>' : '<p class="muted">No open times right now. Please check back soon.</p>'}
       <div id="confirm" class="${picked ? '' : 'hidden'}" style="margin-top:22px;position:sticky;bottom:12px">
         <button class="btn bloom block" id="book" type="button">${booked ? 'Move visit to' : 'Confirm'} ${picked ? esc(fmt(picked, shownTz, { timeZoneName: 'short' })) : ''}</button>
       </div>
       <div class="msg" id="v-msg" aria-live="polite"></div>
-      <p class="small muted" style="margin:14px 0 0">Times need at least ${s.min_notice_hours} hours' notice. Your booking is confirmed instantly. No approval needed.</p>
+      <p class="small muted" style="margin:14px 0 0">Times need at least ${s.min_notice_hours} hours' notice. Times come straight from the author's calendar. Your booking is confirmed instantly.</p>
     </div>`;
   $('#tzsel').onchange = (e) => { shownTz = e.target.value; render(); };
   $$('.times button').forEach((b) => (b.onclick = () => { picked = b.dataset.iso; render(); $('#book')?.focus(); }));

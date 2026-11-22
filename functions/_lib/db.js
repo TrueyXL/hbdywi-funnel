@@ -39,10 +39,10 @@ export function db(env) {
 
 // ---- settings with safe defaults (admin edits these in the dashboard) ----
 export const DEFAULT_SETTINGS = {
-  site: { author: 'Imani Green', brand: 'The Bloom Project', sender_name: 'Imani Green', reply_to: '', updates_list_name: 'The Bloom Project updates', social: {}, testimonials: [] },
-  activation: { enabled: true, rule: { weekdays: [3], nth: [2, 4], time: '17:00' }, timezone: 'America/Los_Angeles', duration_min: 45, default_zoom_url: '', capacity: null, generate_months: 3, next_steps_delay_min: 60 },
+  site: { author: 'Imani Green', brand: 'How Bad Do You Want It?', sender_name: 'Imani Green', reply_to: '', updates_list_name: 'How Bad Do You Want It? updates', social: {}, testimonials: [], volumes: ['Volume One'], theme: { preset: 'brand', custom: {} }, author_photo_url: '', author_bio: '', excerpt: { title: 'A taste of Volume One', text: '', pdf_url: '' } },
+  activation: { enabled: true, rule: { weekdays: [3], nth: [2, 4], time: '18:00' }, timezone: 'America/Los_Angeles', duration_min: 45, default_zoom_url: '', capacity: null, generate_months: 3, next_steps_delay_min: 60 },
   cohort: { enabled: true, waitlist_message: 'Enrollment is closed right now. Join the waitlist and you will be first to know when the next cohort opens.' },
-  visit: { threshold: 5, duration_min: 30, timezone: 'America/Los_Angeles', weekly: {}, buffer_min: 15, min_notice_hours: 48, window_days: 60, max_per_week: 3, fallback_zoom_url: '', author_email: '' },
+  visit: { threshold: 5, duration_min: 30, timezone: 'America/Los_Angeles', weekly: {}, buffer_min: 15, min_notice_hours: 48, window_days: 60, max_per_week: 3, fallback_zoom_url: '', author_email: '', google_calendar_id: '' },
   email: { daily_limit: 95, from: '' },
 };
 

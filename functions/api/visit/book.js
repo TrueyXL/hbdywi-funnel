@@ -2,6 +2,7 @@
 import { db, getSettings, eq } from '../../_lib/db.js';
 import { json, fail, readBody, isTz } from '../../_lib/util.js';
 import { visitSlots } from '../../_lib/time.js';
+import { calendarBusy } from '../../_lib/gcal.js';
 import { visitEmails, track } from '../../_lib/flows.js';
 import { zoomEnabled, createMeeting, updateMeeting } from '../../_lib/zoom.js';
 
@@ -24,7 +25,10 @@ export async function onRequestPost(context) {
   ]);
   if (existing?.status === 'completed') return fail('Your group has already had its complimentary visit.', 409);
   const startIso = new Date(b.starts_at).toISOString();
-  const open = visitSlots(settings.visit, booked.filter((x) => x.group_id !== g.id), blackouts.map((x) => x.day), now);
+  let busy;
+  try { busy = await calendarBusy(env, settings.visit, now, settings.visit.window_days ?? 60); }
+  catch (e) { console.error('gcal', e.message); return fail("We couldn't check the author's calendar just now. Please try again in a few minutes.", 503); }
+  const open = visitSlots(settings.visit, booked.filter((x) => x.group_id !== g.id), blackouts.map((x) => x.day), now, busy);
   if (!open.includes(startIso)) return fail('Sorry, that time was just taken or is no longer available. Please pick another.', 409);
   if (existing?.status === 'booked' && existing.starts_at && new Date(existing.starts_at).toISOString() === startIso) return fail('That is already your booked time.', 409);
 

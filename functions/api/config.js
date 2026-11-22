@@ -20,7 +20,8 @@ export async function onRequestGet({ env }) {
   for (const h of holds) if (h.status === 'paid' || new Date(h.created_at).getTime() > cutoff) taken[h.cohort_id] = (taken[h.cohort_id] || 0) + 1;
 
   return json({
-    site: settings.site,
+    site: (({ author, brand, updates_list_name, social, testimonials, volumes, theme, author_photo_url, author_bio, excerpt }) =>
+      ({ author, brand, updates_list_name, social, testimonials, volumes, theme, author_photo_url, author_bio, excerpt }))(settings.site),
     book: book && { title: book.title, subtitle: book.subtitle, promise: book.promise, cover_url: book.cover_url, formats: Object.keys(book.amazon || {}) },
     activation: {
       enabled: settings.activation.enabled, duration_min: settings.activation.duration_min, timezone: settings.activation.timezone,
@@ -35,7 +36,7 @@ export async function onRequestGet({ env }) {
       cohorts: cohorts.map((c) => {
         const left = Math.max(0, c.capacity - (taken[c.id] || 0));
         return { id: c.id, name: c.name, starts_at: c.starts_at, ends_at: c.ends_at, schedule_text: c.schedule_text, timezone: c.timezone,
-                 price_cents: c.price_cents, currency: c.currency, seats_left: left, open: c.status === 'open' && left > 0 };
+                 price_cents: c.price_cents, currency: c.currency, capacity: c.capacity, seats_left: left, open: c.status === 'open' && left > 0 };
       }),
     },
     visit: { threshold: settings.visit.threshold },

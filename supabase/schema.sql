@@ -48,7 +48,7 @@ create table if not exists contacts (
   email            citext unique not null,
   first_name       text,
   last_name        text,
-  marketing_opt_in boolean not null default false,  -- book / cohort / Bloom Project updates
+  marketing_opt_in boolean not null default false,  -- book / cohort / How Bad Do You Want It? updates
   opt_in_at        timestamptz,
   opt_in_source    text,
   unsubscribed_at  timestamptz,                     -- stops ALL non-essential follow-ups
@@ -130,14 +130,14 @@ create table if not exists cohorts (
   ends_at       timestamptz not null,
   schedule_text text,                              -- human summary: 'Tuesdays 6 PM PT, 6 weeks'
   meeting_times jsonb not null default '[]'::jsonb,-- ["2027-01-12T02:00:00Z", ...] (UTC ISO)
-  meeting_minutes int not null default 60,
+  meeting_minutes int not null default 120,
   timezone      text not null default 'America/Los_Angeles',
   zoom_url      text,
   workbook_url  text,
   instructions  text,
   price_cents   int  not null default 7200,
   currency      text not null default 'usd',
-  capacity      int  not null default 20,
+  capacity      int  not null default 25,
   status        text not null default 'open' check (status in ('draft','open','closed','completed')),
   created_at    timestamptz not null default now()
 );
@@ -222,6 +222,10 @@ create table if not exists group_members (
   updated_at   timestamptz not null default now(),
   unique (group_id, contact_id)
 );
+-- v2 (Imani's feedback): what the leader wants the circle to achieve; which volume a member owns
+alter table groups add column if not exists goal text;
+alter table group_members add column if not exists purchased_volume text;  -- 'Volume One' | 'Volume Two' | … | 'none'
+
 -- belt and braces: the same email can never count twice in one group
 create unique index if not exists group_members_group_email on group_members (group_id, lower(email::text));
 
@@ -485,7 +489,8 @@ create or replace view group_overview as
          g.start_date, g.end_date, g.meeting_day, g.meeting_time, g.frequency, g.timezone, g.est_size,
          c.email as leader_email, coalesce(c.first_name,'') || ' ' || coalesce(c.last_name,'') as leader_name,
          v.starts_at as visit_starts_at, v.status as visit_status,
-         (select count(*) from group_members m where m.group_id = g.id and m.purchased) as purchased_yes
+         (select count(*) from group_members m where m.group_id = g.id and m.purchased) as purchased_yes,
+         g.goal
   from groups g join contacts c on c.id = g.leader_contact_id
   left join author_visits v on v.group_id = g.id;
 
@@ -510,21 +515,25 @@ end $$;
 
 -- ---------- seed defaults (placeholders until the questionnaire returns) ----------
 insert into books (slug, volume, title, subtitle, promise, amazon, is_current) values
-  ('volume-one', 1, '{{BOOK_TITLE}}', '{{BOOK_SUBTITLE}}', '{{ONE_LINE_PROMISE}}',
-   '{"paperback":"{{AMAZON_PAPERBACK_URL}}","kindle":"{{AMAZON_KINDLE_URL}}"}', true)
+  ('volume-one', 1, 'How Bad Do You Want It?', 'Volume One', '{{ONE_LINE_PROMISE}}',
+   '{"paperback":"{{AMAZON_PAPERBACK_URL}}","hardcover":"{{AMAZON_HARDCOVER_URL}}"}', true)
 on conflict (slug) do nothing;
 
 insert into settings (key, value) values
-  ('site', '{"author":"Imani Green","brand":"The Bloom Project","tagline":"{{TAGLINE}}",
+  ('site', '{"author":"Imani Green","brand":"How Bad Do You Want It?","tagline":"{{TAGLINE}}",
              "sender_name":"Imani Green","reply_to":"{{REPLY_TO_EMAIL}}",
-             "updates_list_name":"The Bloom Project updates","social":{"instagram":"","facebook":"","youtube":""},
-             "testimonials":[]}'),
-  ('activation', '{"enabled":true,"rule":{"weekdays":[3],"nth":[2,4],"time":"17:00"},"timezone":"America/Los_Angeles",
+             "updates_list_name":"How Bad Do You Want It? updates","social":{"instagram":"","facebook":"","youtube":""},
+             "testimonials":[],"volumes":["Volume One"],
+             "theme":{"preset":"brand","custom":{}},
+             "author_photo_url":"","author_bio":"",
+             "excerpt":{"title":"A taste of Volume One","text":"","pdf_url":""}}'),
+  ('activation', '{"enabled":true,"rule":{"weekdays":[3],"nth":[2,4],"time":"18:00"},"timezone":"America/Los_Angeles",
                    "duration_min":45,"default_zoom_url":"{{ACTIVATION_ZOOM_URL}}","capacity":null,"generate_months":3,
                    "next_steps_delay_min":60}'),
   ('cohort', '{"enabled":true,"waitlist_message":"Enrollment is closed right now. Join the waitlist and you will be first to know when the next cohort opens."}'),
   ('visit', '{"threshold":5,"duration_min":30,"timezone":"America/Los_Angeles",
-              "weekly":{"1":[["10:00","16:00"]],"2":[["10:00","16:00"]],"3":[["10:00","15:00"]],"4":[["10:00","16:00"]]},
+              "weekly":{"1":[["09:00","17:00"]],"2":[["09:00","17:00"]],"3":[["09:00","17:00"]],"4":[["09:00","17:00"]],"5":[["09:00","17:00"]]},
+              "google_calendar_id":"{{IMANI_GOOGLE_CALENDAR_ID}}",
               "buffer_min":15,"min_notice_hours":48,"window_days":60,"max_per_week":3,
               "fallback_zoom_url":"{{AUTHOR_VISIT_ZOOM_URL}}","author_email":"{{IMANI_EMAIL}}"}'),
   ('email', '{"daily_limit":95,"from":"Imani Green <hello@{{DOMAIN}}>"}')

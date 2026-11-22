@@ -171,3 +171,17 @@ The demo is served from the `gh-pages` branch (the contents of `public/`):
 ```
 npm test && git subtree push --prefix public origin gh-pages
 ```
+
+---
+
+## v2: Imani's beta feedback (2026-11-21)
+
+- **Brand:** "The Bloom Project" → **How Bad Do You Want It?** everywhere (site, emails). Groups are now **Accountability Circles**.
+- **Schedule:** Activation 2nd & 4th Wednesdays at **6 PM Pacific**. Cohorts: **25 seats**, **Mondays 6 PM PT, 2 hours** (`meeting_minutes` default 120).
+- **Book formats:** paperback + hardcover (Kindle hidden unless a URL is set in Admin).
+- **Leader goal:** optional "What do you want your circle to achieve?" (`groups.goal`), shown on the leader dashboard, in Admin and in the author's visit-notification email.
+- **Volume dropdown:** members pick which volume they own (`group_members.purchased_volume`); list comes from Admin → Settings → Volumes.
+- **Leader dashboard:** confirmed visit date card + reschedule + "Email me these links" (`group_links` template).
+- **Google Calendar availability:** weekly hours are the outer window; anything Imani blocks in Google Calendar removes slots (`functions/_lib/gcal.js`, free/busy only). Setup steps are at the top of that file: secrets `GOOGLE_SA_EMAIL`, `GOOGLE_SA_KEY`, then Admin → Author visits → Google Calendar ID. If Google can't be reached, no slots are offered (never double-book).
+- **Seasonal look:** Admin → Settings → Look & season (Brand / Winter / Spring / Summer / Autumn, or custom brand colours). The demo bar has a "Season look" picker.
+- **New homepage sections:** first-chapter excerpt (+ optional PDF), author photo + bio, reader testimonials, all edited in Admin.

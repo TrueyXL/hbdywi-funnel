@@ -4,6 +4,14 @@ import { db, getSettings, eq } from '../../_lib/db.js';
 import { json, fail, readBody, clean, isEmail, bool, isBot } from '../../_lib/util.js';
 import { onGroupJoin, track } from '../../_lib/flows.js';
 
+export function parseVolume(b, settings) {
+  const vols = settings.site.volumes || ['Volume One'];
+  if (b.purchased_volume !== undefined) return b.purchased_volume === 'none' || vols.includes(b.purchased_volume) ? b.purchased_volume : null;
+  if (['yes', true].includes(b.purchased)) return vols[0];
+  if (['no', false].includes(b.purchased)) return 'none';
+  return null;
+}
+
 const okCode = (c) => /^[A-Z2-9]{6}$/.test((c || '').toUpperCase());
 
 export async function onRequestGet({ params, env }) {
@@ -14,7 +22,7 @@ export async function onRequestGet({ params, env }) {
   const settings = await getSettings(client);
   return json({ name: g.name, leader_first_name: g.contacts?.first_name, meeting_day: g.meeting_day, meeting_time: g.meeting_time,
                 frequency: g.frequency, timezone: g.timezone, start_date: g.start_date, member_count: g.member_count,
-                threshold: settings.visit.threshold, updates_list_name: settings.site.updates_list_name });
+                threshold: settings.visit.threshold, updates_list_name: settings.site.updates_list_name, volumes: settings.site.volumes || ['Volume One'] });
 }
 
 export async function onRequestPost(context) {
@@ -24,12 +32,15 @@ export async function onRequestPost(context) {
   if (isBot(b)) return json({ ok: true });
   const first = clean(b.first_name, 80), last = clean(b.last_name, 80), email = clean(b.email, 254).toLowerCase();
   if (!first || !last || !isEmail(email)) return fail('Please enter your first name, last name and a valid email.');
-  if (!['yes', 'no', true, false].includes(b.purchased)) return fail('Please tell us whether you have purchased Volume One.');
-  const purchased = bool(b.purchased);
   const client = db(env);
+  const settings = await getSettings(client);
+  const vol = parseVolume(b, settings);
+  if (!vol) return fail('Please tell us which volume you have purchased.');
+  const purchased = vol !== 'none';
   const res = await client.rpc('join_group', { p_code: params.code, p_email: email, p_first: first, p_last: last, p_purchased: purchased, p_opt_in: bool(b.opt_in) });
   if (res.error) return fail('Invite link not found', 404);
-  await onGroupJoin(context, client, { res, member: { email, first_name: first, purchased }, settings: await getSettings(client) });
+  await client.update('group_members', `id=${eq(res.member_id)}`, { purchased_volume: vol });
+  await onGroupJoin(context, client, { res, member: { email, first_name: first, purchased }, settings });
   if (!res.already_member) await track(client, 'member_joined', { group_id: res.group_id, purchased });
   return json({ ok: true, already_member: res.already_member, group_name: res.group_name, purchased,
                 member_count: res.member_count, threshold: res.threshold, member_url: `/member?t=${res.member_token}` });

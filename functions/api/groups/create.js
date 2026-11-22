@@ -11,6 +11,7 @@ export const parseSchedule = (b) => ({
   time: /^\d{2}:\d{2}$/.test(b.meeting_time || '') ? b.meeting_time : null,
   freq: clean(b.frequency, 40) || null,
   tz: isTz(b.timezone) ? b.timezone : null,
+  goal: typeof b.goal === 'string' ? b.goal.trim().slice(0, 1000) || null : undefined,
   est: Number.isFinite(+b.est_size) && +b.est_size > 0 ? Math.min(10000, Math.round(+b.est_size)) : null,
 });
 
@@ -27,6 +28,7 @@ export async function onRequestPost(context) {
     p_email: email, p_first: first, p_last: last, p_name: name, p_book: book?.id || null,
     p_start: s.start, p_end: s.end, p_day: s.day, p_time: s.time, p_freq: s.freq, p_tz: s.tz, p_est: s.est, p_opt_in: bool(b.opt_in),
   });
+  if (s.goal) await client.update('groups', `id=eq.${res.group_id}`, { goal: s.goal });
   const links = groupLinks(context.env, res);
   await queueAndSend(context, client, [{
     key: `grp:${res.group_id}:created`, to: email, contact_id: res.contact_id, template: 'group_created', immediate: true,

@@ -49,11 +49,11 @@ Thank you for spending 45 minutes with us. Here's how to keep going:
 **1. Get Volume One.** The book is the heart of the journey.
 [[Buy Volume One on Amazon|{{amazon_url}}]]
 
-{{#unless has_paid_cohort}}{{#if cohort_open}}**2. Join a Guided Cohort ($72).** Go through the book live with {{author}} and a small group.
+{{#unless has_paid_cohort}}{{#if cohort_open}}**2. Join a Guided Cohort ($72).** Go through the book live with {{author}}, with weekly meetings, a productivity workspace and an accountability community.
 [[See cohort dates|{{cohort_url}}]]
 
-{{/if}}{{/unless}}{{#unless has_group}}**Gather your people.** Start your own reading group. When 5 people join, your group unlocks a free 30-minute virtual visit with {{author}}.
-[[Start a group|{{group_start_url}}]]
+{{/if}}{{/unless}}{{#unless has_group}}**Gather your people.** Start your own Accountability Circle. When {{threshold}} people join, your circle unlocks a free 30-minute virtual visit with the author.
+[[Start an Accountability Circle|{{group_start_url}}]]
 {{/unless}}
 With gratitude,
 {{author}}`,
@@ -129,9 +129,9 @@ Our next cohort meeting is {{hours_label}}: **{{when}}**.
 
 You did it. Thank you for showing up, week after week.
 
-Want to keep the momentum? Start your own reading group and pass it on. When 5 people join, your group unlocks a free virtual visit with {{author}}.
+Want to keep the momentum? Start your own Accountability Circle and pass it on. When {{threshold}} people join, your circle unlocks a free virtual visit with the author.
 
-[[Start a group|{{group_start_url}}]]
+[[Start an Accountability Circle|{{group_start_url}}]]
 
 I'd love to hear what changed for you. Just hit reply.
 
@@ -159,11 +159,11 @@ You asked us to let you know, and enrollment for the **{{cohort_name}}** is now 
 
   // ---------------- Groups ----------------
   group_created: {
-    label: 'Group leader · group created + invite link',
-    subject: 'Your group "{{group_name}}" is ready. Here is your invite link',
+    label: 'Circle leader · circle created + invite link',
+    subject: 'Your Accountability Circle "{{group_name}}" is ready. Here is your invite link',
     body: `Hi {{first_name}},
 
-Your reading group **{{group_name}}** is set up.
+Your Accountability Circle **{{group_name}}** is set up.
 
 **Share this link with your members:**
 {{invite_url}}
@@ -173,15 +173,15 @@ Your reading group **{{group_name}}** is set up.
 **How it works**
 • Send the link by text, email or group chat. Each person signs up in under a minute.
 • Every person needs their own email address. Duplicates don't count twice.
-• When **{{threshold}} people** have joined, your group unlocks one complimentary 30-minute virtual visit with {{author}}, and you'll get a booking link automatically.
+• When **{{threshold}} people** have joined, your circle unlocks one complimentary 30-minute virtual visit with the author, and you'll get a booking link automatically.
 
-**Your private group dashboard** (member count, visit status, edit your schedule):
+**Your private circle dashboard** (member count, visit status, edit your schedule and goal):
 [[Open my dashboard|{{dashboard_url}}]]
 
 Keep this email. The dashboard link is private to you.`,
   },
   group_milestone: {
-    label: 'Group leader · member-count milestone',
+    label: 'Circle leader · member-count milestone',
     subject: '{{group_name}}: {{member_count}} of {{threshold}} have joined',
     body: `Hi {{first_name}},
 
@@ -193,33 +193,50 @@ Keep this email. The dashboard link is private to you.`,
 [[View my dashboard|{{dashboard_url}}]]`,
   },
   group_eligible: {
-    label: 'Group leader · author visit unlocked + booking link',
+    label: 'Circle leader · author visit unlocked + booking link',
     subject: '🎉 {{group_name}} unlocked a virtual visit with {{author}}',
     body: `Hi {{first_name}},
 
-Five people have joined **{{group_name}}**, so your group has unlocked **one complimentary 30-minute virtual visit** with {{author}}.
+{{threshold}} people have joined **{{group_name}}**, so your circle has unlocked **one complimentary 30-minute virtual visit** with {{author}}.
 
-Pick a time that works for your group. You'll see only available times, shown in your time zone, and it's confirmed instantly.
+Pick a time that works for your circle. You'll see only available times, shown in your time zone, and it's confirmed instantly.
 
 [[Book our author visit|{{booking_url}}]]
 
-You can book now or later. This link is private to your group.`,
+You can book now or later. This link is private to your circle.`,
   },
   visit_unbooked_reminder: {
-    label: 'Group leader · visit not booked yet (7 & 14 days)',
+    label: 'Circle leader · visit not booked yet (7 & 14 days)',
     subject: 'Reminder: {{group_name}} still has a free author visit to book',
     body: `Hi {{first_name}},
 
-Just a nudge: your group's complimentary 30-minute visit with {{author}} is still waiting to be scheduled.
+Just a nudge: your circle's complimentary 30-minute visit with {{author}} is still waiting to be scheduled.
 
 [[Choose a time|{{booking_url}}]]`,
   },
+  group_links: {
+    label: 'Circle leader · links resent (from dashboard)',
+    subject: 'Your links for {{group_name}}',
+    body: `Hi {{first_name}},
+
+Here are your links for **{{group_name}}**, as requested.
+
+**Invite link for members:**
+{{invite_url}}
+
+[[Open my circle dashboard|{{dashboard_url}}]]
+
+{{#if eligible}}**Book or reschedule your author visit:**
+[[Manage our author visit|{{booking_url}}]]
+{{/if}}
+Keep this email. These links are private to you.`,
+  },
   member_confirm: {
-    label: 'Group member · registration confirmation',
+    label: 'Circle member · registration confirmation',
     subject: "You've joined {{group_name}}",
     body: `Hi {{first_name}},
 
-You're registered with **{{group_name}}**{{#if leader_name}}, led by {{leader_name}}{{/if}}. Your group leader will share meeting details.
+You're registered with **{{group_name}}**{{#if leader_name}}, led by {{leader_name}}{{/if}}. Your circle leader will share meeting details.
 
 {{#unless purchased}}**Need the book?** Grab Volume One on Amazon before your first meeting:
 [[Get Volume One|{{amazon_url}}]]
@@ -235,14 +252,14 @@ You're registered with **{{group_name}}**{{#if leader_name}}, led by {{leader_na
 
 Your complimentary virtual visit with {{author}} is **confirmed**.
 
-**Group:** {{group_name}}
+**Circle:** {{group_name}}
 **When:** {{when}}
 **Length:** 30 minutes
 **Where:** Zoom
 
 [[Join on Zoom|{{zoom_url}}]]
 
-Need to change it? You can reschedule or cancel anytime from your booking page (your group keeps its one visit):
+Need to change it? You can reschedule or cancel anytime from your booking page (your circle keeps its one visit):
 [[Reschedule or cancel|{{booking_url}}]]
 
 A calendar invite is attached. We'll remind you 48 hours and 1 hour before.`,
@@ -266,7 +283,7 @@ Your author visit has been moved.
     subject: 'Cancelled: author visit for {{group_name}}',
     body: `Hi {{first_name}},
 
-Your visit on {{previous_when}} has been cancelled. Your group still has its complimentary visit, so you can book a new time whenever you're ready:
+Your visit on {{previous_when}} has been cancelled. Your circle still has its complimentary visit, so you can book a new time whenever you're ready:
 
 [[Book a new time|{{booking_url}}]]`,
   },
@@ -275,19 +292,20 @@ Your visit on {{previous_when}} has been cancelled. Your group still has its com
     subject: 'Reminder: author visit with {{author}} {{hours_label}}',
     body: `Hi {{first_name}},
 
-Your group's visit with {{author}} is {{hours_label}}: **{{when}}**.
+Your circle's visit with {{author}} is {{hours_label}}: **{{when}}**.
 
 [[Join on Zoom|{{zoom_url}}]]
 
-Tip: have one person share a screen or a speaker so the whole group can hear.`,
+Tip: have one person share a screen or a speaker so the whole circle can hear.`,
   },
   visit_author_notify: {
-    label: 'Imani · new / changed / cancelled visit',
+    label: 'Author · new / changed / cancelled visit',
     subject: 'Author visit {{change}}: {{group_name}}, {{when_short_host}}',
     body: `Author visit **{{change}}**.
 
-**Group:** {{group_name}} ({{member_count}} members)
+**Circle:** {{group_name}} ({{member_count}} members)
 **Leader:** {{leader_name}}, {{leader_email}}
+{{#if group_goal}}**What they want to achieve:** {{group_goal}}{{/if}}
 **When:** {{when_host}}
 {{#if previous_when}}**Previously:** {{previous_when_host}}{{/if}}
 **Zoom:** {{zoom_url}}
@@ -301,13 +319,13 @@ The attached invite updates your calendar. Your subscribed calendar feed updates
     subject: "Don't do the journey alone",
     body: `Hi {{first_name}},
 
-Thanks for picking up Volume One. Reading it is good. Reading it *with people* is life-changing.
+Thanks for picking up Volume One. Powerful on your own. Even more powerful when you grow with others.
 
-**Join a Guided Cohort ($72):** go through the book live with {{author}}.
+**Join a Guided Cohort ($72):** go through the book live with {{author}} and an accountability community.
 [[See cohorts|{{cohort_url}}]]
 
-**Start your own group:** invite friends, and when 5 join you unlock a free virtual visit with {{author}}.
-[[Start a group|{{group_start_url}}]]
+**Start your own Accountability Circle:** invite friends, and when {{threshold}} join you unlock a free virtual visit with the author.
+[[Start an Accountability Circle|{{group_start_url}}]]
 
 **Not sure yet?** Start with the free 45-minute Activation.
 [[Pick a date|{{activation_url}}]]`,

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Group dashboard · HBDYWI</title>
+<title>Circle dashboard · How Bad Do You Want It?</title>
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#f6f1ea">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,16 +13,16 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<header class="top"><div class="wrap"><a class="brand" href="./"><span data-bloom></span><span>The Bloom Project</span></a><a class="btn sm ghost" href="./">Home</a></div></header>
+<header class="top"><div class="wrap"><a class="brand" href="./"><span data-bloom></span><span data-bind="brand">How Bad Do You Want It?</span></a><a class="btn sm ghost" href="./">Home</a></div></header>
 <main id="main" class="page"><div class="wrap narrow">
 
-<div id="gd"><p class="muted">Loading your group…</p></div>
+<div id="gd"><p class="muted">Loading your circle…</p></div>
 </div></main>
-<footer class="foot"><div class="wrap"><span>© Imani Green · The Bloom Project</span><span><a href="privacy">Privacy</a></span></div></footer>
+<footer class="foot"><div class="wrap"><span>© Imani Green · <span data-bind="brand">How Bad Do You Want It?</span></span><span><a href="privacy">Privacy</a></span></div></footer>
 <script type="module">
 import { $, $$, fmt, fmtDate, fmtTime, tzName, viewerTz, esc, formData, busy, say, params, header, BLOOM_SVG } from './js/common.js';
-import { api, track, demoBar, DEMO, amazonHref } from './js/api.js';
-demoBar(); header(); $$('[data-bloom]').forEach((el) => (el.outerHTML = BLOOM_SVG));
+import { api, track, demoBar, DEMO, amazonHref, loadSite } from './js/api.js';
+demoBar(); header(); $$('[data-bloom]').forEach((el) => (el.outerHTML = BLOOM_SVG)); loadSite();
 
 const TZS = ['America/Los_Angeles','America/Denver','America/Phoenix','America/Chicago','America/New_York','America/Toronto','America/Halifax','America/Anchorage','Pacific/Honolulu','Europe/London','Europe/Paris','Africa/Lagos','Africa/Johannesburg','Asia/Dubai','Asia/Kolkata','Asia/Singapore','Australia/Sydney'];
 function fillTz(sel, current) { const v = current || viewerTz(); const list = TZS.includes(v) ? TZS : [v, ...TZS];
@@ -31,27 +31,32 @@ function fillTz(sel, current) { const v = current || viewerTz(); const list = TZ
 const t = params.get('t');
 async function load() {
   const box = $('#gd');
-  if (!t) { box.innerHTML = '<h1>Link missing</h1><p>Open the dashboard link from your group email.</p>'; return; }
-  let r; try { r = await api('groups/' + t); } catch (e) { box.innerHTML = `<h1>Group not found</h1><p class="muted">Check the link in your email, or <a href="start-group">start a new group</a>.</p>`; return; }
+  if (!t) { box.innerHTML = '<h1>Link missing</h1><p>Open the dashboard link from your circle email.</p>'; return; }
+  let r; try { r = await api('groups/' + t); } catch (e) { box.innerHTML = `<h1>Circle not found</h1><p class="muted">Check the link in your email, or <a href="start-group">start a new circle</a>.</p>`; return; }
   const g = r.group, n = r.member_count, need = r.threshold;
   const dots = Array.from({ length: Math.max(need, n) }, (_, i) => `<span class="dot ${i < n ? 'on' : ''} ${i >= need ? 'extra' : ''}">${i + 1}</span>`).join('');
   const v = r.visit;
   const visitHtml = !r.eligible
     ? `<div class="unlock"><span aria-hidden="true">🔒</span><span><b>${need - n} more</b> ${need - n === 1 ? 'member' : 'members'} to unlock your free author visit.</span></div>`
     : v && v.status === 'booked'
-      ? `<div class="unlock yes"><span aria-hidden="true">📅</span><span>Author visit booked: ${esc(fmt(v.starts_at, viewerTz(), { weekday: 'long', month: 'long', timeZoneName: 'short' }))}</span></div>
-         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">${v.zoom_url ? `<a class="btn sm" href="${esc(v.zoom_url)}">Zoom link</a>` : ''}<a class="btn sm ghost" href="${esc(r.booking_url)}">Reschedule or cancel</a></div>`
+      ? `<div class="visit-date"><span class="eyebrow" style="margin:0 0 6px">Author visit confirmed</span>
+           <b>${esc(fmt(v.starts_at, g.timezone || viewerTz(), { weekday: 'long', month: 'long', year: 'numeric', timeZoneName: 'short' }))}</b>
+           ${g.timezone && g.timezone !== viewerTz() ? `<span class="small muted">Your device: ${esc(fmt(v.starts_at, viewerTz(), { timeZoneName: 'short' }))}</span>` : ''}
+           <span class="small muted">30 minutes · virtual</span></div>
+         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">${v.zoom_url ? `<a class="btn sm" href="${esc(v.zoom_url)}">Join link</a>` : ''}<a class="btn sm ghost" href="${esc(r.booking_url)}">Reschedule or cancel</a><button class="btn sm ghost" type="button" data-resend>Email me these links</button></div>`
       : v && v.status === 'completed'
         ? `<div class="unlock yes"><span aria-hidden="true">✓</span><span>Your author visit is complete. Thank you!</span></div>`
-        : `<div class="unlock yes"><span aria-hidden="true">🎉</span><span>Author visit unlocked!</span></div><a class="btn bloom" style="margin-top:12px" href="${esc(r.booking_url)}">Book our author visit</a>`;
+        : `<div class="unlock yes"><span aria-hidden="true">🎉</span><span>Author visit unlocked!${v && v.status === 'cancelled' ? ' Your last booking was cancelled, so pick a new time.' : ''}</span></div><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"><a class="btn bloom" href="${esc(r.booking_url)}">Book our author visit</a><button class="btn sm ghost" type="button" data-resend>Email me the booking link</button></div>`;
   box.innerHTML = `
-    <span class="eyebrow">Group dashboard · private to you</span>
+    <span class="eyebrow">Accountability Circle dashboard · private to you</span>
     <h1 style="font-size:clamp(2rem,6vw,3.2rem)">${esc(g.name)}</h1>
     <div class="card" style="margin-top:20px">
       <h2 style="font-size:1.4rem;margin:0">${n} of ${need} members</h2>
       <div class="dots" role="img" aria-label="${n} of ${need} members joined">${dots}</div>
       ${visitHtml}
+      <div class="msg" id="r-msg" aria-live="polite"></div>
     </div>
+    ${g.goal ? `<div class="card" style="margin-top:20px"><h2 style="font-size:1.4rem">What we want to achieve</h2><p style="margin:0;white-space:pre-line">${esc(g.goal)}</p></div>` : ''}
     <div class="card" style="margin-top:20px">
       <h2 style="font-size:1.4rem">Your invite link</h2>
       <div class="invite"><label class="sr" for="inv">Invite link</label><input id="inv" type="text" readonly value="${esc(r.invite_url)}"><button class="btn" type="button" id="copy">Copy</button></div>
@@ -60,12 +65,13 @@ async function load() {
     </div>
     <div class="card" style="margin-top:20px">
       <h2 style="font-size:1.4rem">Members</h2>
-      ${r.members.length ? `<div class="scroll-x"><table class="table"><thead><tr><th>Name</th><th>Has the book</th><th>Joined</th></tr></thead><tbody>${r.members.map((m) => `<tr><td>${esc(m.name)}</td><td>${m.purchased ? 'Yes' : 'Not yet'}</td><td>${esc(fmtDate(m.joined, viewerTz()).replace(/^\w+, /, ''))}</td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">No one yet. Share your link!</p>'}
+      ${r.members.length ? `<div class="scroll-x"><table class="table"><thead><tr><th>Name</th><th>Book</th><th>Joined</th></tr></thead><tbody>${r.members.map((m) => `<tr><td>${esc(m.name)}</td><td>${m.purchased ? esc(m.purchased_volume && m.purchased_volume !== 'none' ? m.purchased_volume : 'Yes') : 'Not yet'}</td><td>${esc(fmtDate(m.joined, viewerTz()).replace(/^\w+, /, ''))}</td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">No one yet. Share your link!</p>'}
     </div>
     <details class="card" style="margin-top:20px">
-      <summary style="cursor:pointer;font-weight:600">Edit group details &amp; schedule</summary>
+      <summary style="cursor:pointer;font-weight:600">Edit circle details, goal &amp; schedule</summary>
       <form id="edit" style="margin-top:18px" novalidate>
-        <div class="field"><label for="g-name">Group name</label><input id="g-name" name="group_name" type="text" value="${esc(g.name)}"></div>
+        <div class="field"><label for="g-name">Circle name</label><input id="g-name" name="group_name" type="text" value="${esc(g.name)}"></div>
+        <div class="field"><label for="g-goal">What do you want your circle to achieve?</label><textarea id="g-goal" name="goal" maxlength="1000" rows="3">${esc(g.goal || '')}</textarea></div>
         <div class="row two">
           <div class="field"><label for="g-start">Start date</label><input id="g-start" name="start_date" type="date" value="${esc(g.start_date || '')}"></div>
           <div class="field"><label for="g-end">End date</label><input id="g-end" name="end_date" type="date" value="${esc(g.end_date || '')}"></div>
@@ -83,12 +89,17 @@ async function load() {
     </details>`;
   fillTz($('#g-tz'), g.timezone);
   $('#copy').onclick = async () => { try { await navigator.clipboard.writeText(r.invite_url); } catch { $('#inv').select(); document.execCommand('copy'); } $('#copy').textContent = 'Copied ✓'; track('invite_copied'); };
+  $$('[data-resend]').forEach((b) => b.addEventListener('click', async () => {
+    busy(b, true, 'Sending…');
+    try { const x = await api('groups/' + t, { method: 'POST', body: { resend: true } }); say($('#r-msg'), `Sent ✓ Check ${x.sent_to || 'your inbox'}.`, 'ok'); busy(b, false); b.textContent = 'Sent ✓'; b.disabled = true; }
+    catch (err) { say($('#r-msg'), err.message); busy(b, false); }
+  }));
   $('#fill')?.addEventListener('click', async (e) => { e.preventDefault(); await api('groups/' + t, { method: 'POST', body: { demo_fill: Math.max(1, need - n) } }); load(); });
   $('#edit').addEventListener('submit', async (e) => {
     e.preventDefault(); const f = e.currentTarget, d = formData(f), btn = f.querySelector('button');
     if (d.start_date && d.end_date && d.end_date < d.start_date) return say($('#e-msg'), 'The end date must be after the start date.');
     busy(btn, true, 'Saving…');
-    try { await api('groups/' + t, { method: 'POST', body: d }); say($('#e-msg'), 'Saved ✓', 'ok'); } catch (err) { say($('#e-msg'), err.message); }
+    try { await api('groups/' + t, { method: 'POST', body: d }); say($('#e-msg'), 'Saved ✓', 'ok'); setTimeout(load, 700); } catch (err) { say($('#e-msg'), err.message); }
     busy(btn, false);
   });
 }

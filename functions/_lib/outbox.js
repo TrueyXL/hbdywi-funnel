@@ -79,7 +79,7 @@ export async function processOutbox(env, client, { ids = null, limit = 15 } = {}
         site_url: base, site_host: base.replace(/^https?:\/\//, ''), amazon_url: `${base}/go/amazon?src=email`,
         amazon_direct_url: amazon,
         activation_url: `${base}/#activation`, cohort_url: `${base}/#cohort`, group_start_url: `${base}/start-group`,
-        book_title: book?.title,
+        book_title: book?.title, threshold: settings.visit.threshold || 5,
         ...d,
       };
       if (d.starts_at) {
