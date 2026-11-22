@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>You're enrolled · HBDYWI</title>
+<title>You're enrolled · How Bad Do You Want It?</title>
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#f6f1ea">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,16 +13,16 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<header class="top"><div class="wrap"><a class="brand" href="./"><span data-bloom></span><span>The Bloom Project</span></a><a class="btn sm ghost" href="./">Home</a></div></header>
+<header class="top"><div class="wrap"><a class="brand" href="./"><span data-bloom></span><span data-bind="brand">How Bad Do You Want It?</span></a><a class="btn sm ghost" href="./">Home</a></div></header>
 <main id="main" class="page"><div class="wrap narrow">
 
 <div class="card center stack" id="cs" role="status"><div style="font-size:2.4rem">⏳</div><h1 style="font-size:2rem">Confirming your payment…</h1></div>
 </div></main>
-<footer class="foot"><div class="wrap"><span>© Imani Green · The Bloom Project</span><span><a href="privacy">Privacy</a></span></div></footer>
+<footer class="foot"><div class="wrap"><span>© Imani Green · <span data-bind="brand">How Bad Do You Want It?</span></span><span><a href="privacy">Privacy</a></span></div></footer>
 <script type="module">
 import { $, $$, fmt, fmtDate, fmtTime, tzName, viewerTz, esc, formData, busy, say, params, header, BLOOM_SVG } from './js/common.js';
-import { api, track, demoBar, DEMO, amazonHref } from './js/api.js';
-demoBar(); header(); $$('[data-bloom]').forEach((el) => (el.outerHTML = BLOOM_SVG));
+import { api, track, demoBar, DEMO, amazonHref, loadSite } from './js/api.js';
+demoBar(); header(); $$('[data-bloom]').forEach((el) => (el.outerHTML = BLOOM_SVG)); loadSite();
 
 const sid = params.get('session_id');
 async function poll(n = 0) {

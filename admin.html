@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Funnel Admin · HBDYWI</title>
+<title>Funnel Admin · How Bad Do You Want It?</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,400..600&display=swap" rel="stylesheet">
@@ -123,6 +123,7 @@
             <div class="field"><label>Fallback Zoom link <span class="opt">(if Zoom API not connected)</span></label><input type="text" name="fallback_zoom_url"></div>
             <div class="field"><label>Imani's notification email</label><input type="email" name="author_email"></div>
           </div>
+          <div class="field"><label>Google Calendar ID <span class="opt">(usually Imani's Gmail address; anything she blocks out there hides those times. Commas for several calendars.)</span></label><input type="text" name="google_calendar_id" placeholder="name@gmail.com"></div>
           <button class="btn" type="submit">Save availability</button><div class="msg" id="avail-msg"></div>
         </form>
         <h3 style="margin-top:24px">Days off</h3>
@@ -147,8 +148,8 @@
         <div class="field"><label>Cover image URL</label><input type="text" name="cover_url"></div>
         <div class="row three">
           <div class="field"><label>Amazon paperback</label><input type="text" name="paperback"></div>
-          <div class="field"><label>Amazon Kindle</label><input type="text" name="kindle"></div>
-          <div class="field"><label>Amazon hardcover <span class="opt">(optional)</span></label><input type="text" name="hardcover"></div>
+          <div class="field"><label>Amazon hardcover</label><input type="text" name="hardcover"></div>
+          <div class="field"><label>Amazon Kindle <span class="opt">(blank = hidden)</span></label><input type="text" name="kindle"></div>
         </div>
         <button class="btn" type="submit">Save book</button><div class="msg" id="book-msg"></div>
       </form>
@@ -173,6 +174,23 @@
         <div class="row two"><div class="field"><label>Email sender name</label><input type="text" name="sender_name"></div><div class="field"><label>Reply-to email</label><input type="email" name="reply_to"></div></div>
         <div class="field"><label>Updates list name</label><input type="text" name="updates_list_name"></div>
         <div class="field"><label>Testimonials <span class="opt">(one per line: quote | name)</span></label><textarea name="testimonials" style="font-family:var(--sans);font-size:1rem"></textarea></div>
+        <div class="field"><label>Volumes available <span class="opt">(comma-separated, shown in the member "which volume" dropdown)</span></label><input type="text" name="volumes" placeholder="Volume One, Volume Two"></div>
+        <h3 style="margin-top:22px">Look &amp; season</h3>
+        <div class="row two">
+          <div class="field"><label>Theme</label><select name="theme_preset"></select></div>
+          <div class="field"><label>Accent colour <span class="opt">(brand theme only)</span></label><input type="text" name="theme_accent" placeholder="#b4566e"></div>
+        </div>
+        <div class="row three">
+          <div class="field"><label>Background</label><input type="text" name="theme_paper" placeholder="#f6f1ea"></div>
+          <div class="field"><label>Deep colour (buttons)</label><input type="text" name="theme_deep" placeholder="#2f3a2f"></div>
+          <div class="field"><label>Text colour</label><input type="text" name="theme_ink" placeholder="#23201c"></div>
+        </div>
+        <h3 style="margin-top:22px">Author &amp; excerpt</h3>
+        <div class="field"><label>Author photo URL <span class="opt">(https://…)</span></label><input type="text" name="author_photo_url"></div>
+        <div class="field"><label>Author bio <span class="opt">(blank line = new paragraph)</span></label><textarea name="author_bio" style="font-family:var(--sans);font-size:1rem"></textarea></div>
+        <div class="field"><label>Excerpt heading</label><input type="text" name="excerpt_title"></div>
+        <div class="field"><label>Excerpt text <span class="opt">(first pages of Chapter One; blank line = new paragraph)</span></label><textarea name="excerpt_text" style="font-family:var(--sans);font-size:1rem;min-height:220px"></textarea></div>
+        <div class="field"><label>Full first chapter PDF URL <span class="opt">(optional)</span></label><input type="text" name="excerpt_pdf_url"></div>
         <label class="check"><input type="checkbox" name="cohort_enabled"> <span>Cohort enrollment on (off = everyone sees the waitlist)</span></label>
         <button class="btn" type="submit" style="margin-top:12px">Save</button><div class="msg" id="site-msg"></div>
       </form>

@@ -80,8 +80,9 @@ export function weekKey(date, tz) {
  * cfg: settings.visit  {timezone, weekly:{"1":[["10:00","16:00"]]}, duration_min, buffer_min, min_notice_hours, window_days, max_per_week}
  * booked: [{starts_at, duration_min}]  (other groups' booked visits)
  * blackouts: ['2027-01-01', ...] dates in author tz
+ * calendarBusy: [{start, end}] busy blocks from Imani's Google Calendar (any event she blocks out)
  */
-export function visitSlots(cfg, booked = [], blackouts = [], now = new Date()) {
+export function visitSlots(cfg, booked = [], blackouts = [], now = new Date(), calendarBusy = []) {
   const tz = cfg.timezone || 'America/Los_Angeles';
   const dur = cfg.duration_min || 30;
   const buf = cfg.buffer_min ?? 15;
@@ -92,6 +93,10 @@ export function visitSlots(cfg, booked = [], blackouts = [], now = new Date()) {
     const s = new Date(b.starts_at).getTime();
     return [s - buf * 60000, s + (b.duration_min || dur) * 60000 + buf * 60000];
   });
+  for (const c of calendarBusy) {
+    const a = new Date(c.start).getTime(), b = new Date(c.end).getTime();
+    if (Number.isFinite(a) && Number.isFinite(b) && b > a) busy.push([a - buf * 60000, b + buf * 60000]);
+  }
   const perWeek = {};
   for (const b of booked) { const k = weekKey(new Date(b.starts_at), tz); perWeek[k] = (perWeek[k] || 0) + 1; }
   const max = cfg.max_per_week || Infinity;

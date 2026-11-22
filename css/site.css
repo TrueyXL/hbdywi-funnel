@@ -221,3 +221,22 @@ footer.foot a { color: var(--ink-2); }
 .reveal.in { opacity: 1; transform: none; }
 .quote { font-family: var(--serif); font-size: 1.3rem; line-height: 1.4; margin: 0; }
 .hidden { display: none !important; }
+
+/* ---- v2: excerpt, author photo, testimonials, visit date, season picker ---- */
+.vol { display: block; font-size: .55em; color: var(--ink-2); font-style: italic; margin-top: .2em; }
+.excerpt { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(22px, 5vw, 44px); box-shadow: var(--shadow);
+  font-family: var(--serif); font-size: 1.12rem; line-height: 1.75; color: var(--ink); max-height: 34em; overflow: auto; }
+.excerpt p:first-child::first-letter { float: left; font-size: 3.4em; line-height: .9; padding: 4px 8px 0 0; color: var(--bloom); }
+.author-grid { display: grid; gap: 32px; align-items: center; }
+@media (min-width: 820px) { .author-grid { grid-template-columns: minmax(240px, 380px) 1fr; gap: 56px; } }
+.author-photo { margin: 0; border-radius: var(--radius); overflow: hidden; aspect-ratio: 4 / 5; background: var(--paper-2); box-shadow: var(--shadow); max-width: 380px; width: 100%; }
+.author-photo img { width: 100%; height: 100%; object-fit: cover; }
+.ph-photo { height: 100%; display: grid; place-items: center; text-align: center; color: var(--muted); font-size: .95rem;
+  background: repeating-linear-gradient(135deg, transparent 0 14px, color-mix(in srgb, var(--line) 60%, transparent) 14px 15px); }
+.quotes { display: grid; gap: 18px; margin-top: 24px; }
+@media (min-width: 820px) { .quotes { grid-template-columns: repeat(3, 1fr); } }
+.quote-card { margin: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; }
+.visit-date { display: grid; gap: 2px; padding: 16px 18px; border-radius: 14px; background: var(--bloom-soft); color: var(--ink); }
+.visit-date b { font-family: var(--serif); font-size: 1.25rem; font-weight: 500; }
+.demo-bar label { white-space: nowrap; }
+.demo-bar select { font: inherit; font-size: .85em; padding: 1px 6px; border-radius: 6px; margin-left: 4px; width: auto; min-height: 0; }

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Join a reading group · HBDYWI</title>
+<title>Join an Accountability Circle · How Bad Do You Want It?</title>
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#f6f1ea">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,16 +13,16 @@
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<header class="top"><div class="wrap"><a class="brand" href="./"><span data-bloom></span><span>The Bloom Project</span></a><a class="btn sm ghost" href="./">Home</a></div></header>
+<header class="top"><div class="wrap"><a class="brand" href="./"><span data-bloom></span><span data-bind="brand">How Bad Do You Want It?</span></a><a class="btn sm ghost" href="./">Home</a></div></header>
 <main id="main" class="page"><div class="wrap narrow">
 
 <div id="jn"><p class="muted">Loading invitation…</p></div>
 </div></main>
-<footer class="foot"><div class="wrap"><span>© Imani Green · The Bloom Project</span><span><a href="privacy">Privacy</a></span></div></footer>
+<footer class="foot"><div class="wrap"><span>© Imani Green · <span data-bind="brand">How Bad Do You Want It?</span></span><span><a href="privacy">Privacy</a></span></div></footer>
 <script type="module">
 import { $, $$, fmt, fmtDate, fmtTime, tzName, viewerTz, esc, formData, busy, say, params, header, BLOOM_SVG } from './js/common.js';
-import { api, track, demoBar, DEMO, amazonHref } from './js/api.js';
-demoBar(); header(); $$('[data-bloom]').forEach((el) => (el.outerHTML = BLOOM_SVG));
+import { api, track, demoBar, DEMO, amazonHref, loadSite } from './js/api.js';
+demoBar(); header(); $$('[data-bloom]').forEach((el) => (el.outerHTML = BLOOM_SVG)); loadSite();
 
 const code = (params.get('c') || (location.pathname.match(/\/j\/([A-Za-z0-9]+)/) || [])[1] || '').toUpperCase();
 track('page_view');
@@ -31,28 +31,26 @@ async function load() {
   let g; try { g = await api('join/' + code); } catch { box.innerHTML = '<h1>Invite not found</h1><p class="muted">Ask your group leader to resend the link.</p>'; return; }
   const when = [g.meeting_day, g.meeting_time && new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'UTC' }).format(new Date('2000-01-01T' + g.meeting_time + ':00Z')), g.frequency && g.frequency.toLowerCase()].filter(Boolean).join(' · ');
   box.innerHTML = `
-    <span class="eyebrow">You're invited</span>
+    <span class="eyebrow">You're invited to an Accountability Circle</span>
     <h1 style="font-size:clamp(2rem,6vw,3.2rem)">Join ${esc(g.name)}</h1>
-    <p class="lede">${g.leader_first_name ? esc(g.leader_first_name) + ' invited you to read <b>Volume One</b> together.' : 'Read <b>Volume One</b> together.'}${when ? `<br><span class="small muted">${esc(when)}${g.timezone ? ' (' + esc(g.timezone.replace(/_/g, ' ')) + ')' : ''}</span>` : ''}</p>
+    <p class="lede">${g.leader_first_name ? esc(g.leader_first_name) + ' invited you to grow through <b>How Bad Do You Want It?</b> together.' : 'Grow through <b>How Bad Do You Want It?</b> together.'}${when ? `<br><span class="small muted">${esc(when)}${g.timezone ? ' (' + esc(g.timezone.replace(/_/g, ' ')) + ')' : ''}</span>` : ''}</p>
     <form class="card" id="j-form" style="margin-top:24px" novalidate>
       <div class="row two">
         <div class="field"><label for="j-first">First name</label><input id="j-first" name="first_name" type="text" autocomplete="given-name" required></div>
         <div class="field"><label for="j-last">Last name</label><input id="j-last" name="last_name" type="text" autocomplete="family-name" required></div>
       </div>
       <div class="field"><label for="j-email">Email</label><input id="j-email" name="email" type="email" autocomplete="email" inputmode="email" required></div>
-      <fieldset><legend>Have you purchased Volume One?</legend>
-        <div class="seg"><label><input type="radio" name="purchased" value="yes" required><span>Yes</span></label><label><input type="radio" name="purchased" value="no"><span>Not yet</span></label></div>
-      </fieldset>
-      <div class="field"><label class="check"><input type="checkbox" name="opt_in"> <span>Also send me updates about the book, cohorts and ${esc(g.updates_list_name || 'The Bloom Project')}. <span class="muted">(optional, joining the group never subscribes you)</span></span></label></div>
+      <div class="field"><label for="j-vol">Which volume have you purchased?</label><select id="j-vol" name="purchased_volume" required><option value="">Choose…</option>${(g.volumes || ['Volume One']).map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join('')}<option value="none">Not yet</option></select></div>
+      <div class="field"><label class="check"><input type="checkbox" name="opt_in"> <span>Also send me updates about the book, cohorts and ${esc(g.updates_list_name || 'How Bad Do You Want It?')}. <span class="muted">(optional, joining the circle never subscribes you)</span></span></label></div>
       <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-      <button class="btn bloom block" type="submit">Join the group</button>
+      <button class="btn bloom block" type="submit">Join the circle</button>
       <div class="msg" id="j-msg" aria-live="polite"></div>
     </form>`;
   $('#j-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = e.currentTarget, btn = f.querySelector('button[type=submit]'), msg = $('#j-msg'), d = formData(f);
     if (!d.first_name?.trim() || !d.last_name?.trim() || !f.email.checkValidity()) return say(msg, 'Please enter your first name, last name and a valid email.');
-    if (!d.purchased) return say(msg, 'Please tell us whether you have purchased Volume One.');
+    if (!d.purchased_volume) return say(msg, 'Please tell us which volume you have purchased (or choose "Not yet").');
     busy(btn, true, 'Joining…'); say(msg, '');
     try {
       const r = await api('join/' + code, { method: 'POST', body: d });

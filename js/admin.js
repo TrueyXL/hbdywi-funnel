@@ -1,4 +1,4 @@
-import { $, $$, fmt, esc, money, say, busy, formData, viewerTz } from './common.js';
+import { $, $$, fmt, esc, money, say, busy, formData, viewerTz, THEMES } from './common.js';
 import { DEMO } from './api.js';
 import { zonedToUtc } from './time.js';
 
@@ -166,8 +166,9 @@ async function openGroup(id) {
   $('#group-detail').innerHTML = `<div class="card"><h3>${esc(g.name)}</h3>
     <p class="small">Invite: <a href="${esc(g.invite_url)}" target="_blank">${esc(g.invite_url)}</a><br>Leader dashboard: <a href="${esc(g.dashboard_url)}" target="_blank">open</a> · Booking page: <a href="${esc(g.booking_url)}" target="_blank">open</a></p>
     <p class="small muted">Dates: ${esc(g.start_date || '?')} → ${esc(g.end_date || '?')} · ${esc(g.frequency || '')} · ${esc(g.timezone)}</p>
+    ${g.goal ? `<p><b>What they want to achieve:</b><br><span style="white-space:pre-line">${esc(g.goal)}</span></p>` : ''}
     ${btn('Resend leader email', `id="resend"`, '')}
-    <div class="scroll-x" style="margin-top:14px"><table class="table"><thead><tr><th>Member</th><th>Email</th><th>Purchased</th><th>Joined</th></tr></thead><tbody>${g.members.map((m) => `<tr><td>${esc(m.first_name)} ${esc(m.last_name)}</td><td>${esc(m.email)}</td><td>${m.purchased ? 'Yes' : 'No'}</td><td>${esc(when(m.created_at))}</td></tr>`).join('')}</tbody></table></div></div>`;
+    <div class="scroll-x" style="margin-top:14px"><table class="table"><thead><tr><th>Member</th><th>Email</th><th>Purchased</th><th>Joined</th></tr></thead><tbody>${g.members.map((m) => `<tr><td>${esc(m.first_name)} ${esc(m.last_name)}</td><td>${esc(m.email)}</td><td>${m.purchased ? esc(m.purchased_volume && m.purchased_volume !== 'none' ? m.purchased_volume : 'Yes') : 'No'}</td><td>${esc(when(m.created_at))}</td></tr>`).join('')}</tbody></table></div></div>`;
   $('#resend').onclick = async () => { const r = await A(`groups/${id}/resend-invite`, { method: 'POST', body: {} }); alert(`Sent (${r.template === 'group_eligible' ? 'booking link' : 'invite link'}).`); };
 }
 
@@ -183,7 +184,7 @@ async function loadVisits() {
   $$('[data-done]').forEach((b) => (b.onclick = async () => { await A('visits/' + b.dataset.done, { method: 'PATCH', body: { status: 'completed' } }); loadVisits(); }));
   const f = $('#avail');
   f.weekly.value = Object.entries(v.weekly || {}).sort().map(([d, w]) => `${DAYS[d]} ${w.map(([a, b]) => `${a}-${b}`).join(', ')}`).join('\n');
-  for (const k of ['timezone', 'min_notice_hours', 'window_days', 'buffer_min', 'max_per_week', 'threshold', 'fallback_zoom_url', 'author_email']) f[k].value = v[k] ?? '';
+  for (const k of ['timezone', 'min_notice_hours', 'window_days', 'buffer_min', 'max_per_week', 'threshold', 'fallback_zoom_url', 'author_email', 'google_calendar_id']) f[k].value = v[k] ?? '';
   $('#blackouts').innerHTML = blk.map((b) => `<li>${esc(b.day)} ${esc(b.note || '')} <a href="#" data-unblock="${b.id}">remove</a></li>`).join('') || '<li class="muted">None</li>';
   $$('[data-unblock]').forEach((a) => (a.onclick = async (e) => { e.preventDefault(); await A('blackouts/' + a.dataset.unblock, { method: 'DELETE' }); loadVisits(); }));
 }
@@ -197,7 +198,7 @@ $('#avail').onsubmit = async (e) => {
       weekly[day] = m[2].split(',').map((r) => { const t = r.trim().match(/^(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})$/); if (!t) throw new Error('Time range not understood: ' + r); return [t[1].padStart(5, '0'), t[2].padStart(5, '0')]; });
     }
     const value = { ...SETTINGS.visit, weekly, timezone: d.timezone, min_notice_hours: +d.min_notice_hours, window_days: +d.window_days, buffer_min: +d.buffer_min,
-      max_per_week: +d.max_per_week, threshold: +d.threshold || 5, fallback_zoom_url: d.fallback_zoom_url, author_email: d.author_email };
+      max_per_week: +d.max_per_week, threshold: +d.threshold || 5, fallback_zoom_url: d.fallback_zoom_url, author_email: d.author_email, google_calendar_id: (d.google_calendar_id || '').trim() };
     await A('settings/visit', { method: 'PUT', body: { value } }); SETTINGS.visit = value; say($('#avail-msg'), 'Saved ✓', 'ok');
   } catch (err) { say($('#avail-msg'), err.message); }
 };
@@ -231,6 +232,12 @@ async function loadSettings() {
   const sf = $('#site-form'), site = SETTINGS.site;
   for (const k of ['author', 'brand', 'sender_name', 'reply_to', 'updates_list_name']) sf[k].value = site[k] || '';
   sf.testimonials.value = (site.testimonials || []).map((t) => `${t.quote} | ${t.name || ''}`).join('\n');
+  sf.volumes.value = (site.volumes || ['Volume One']).join(', ');
+  sf.theme_preset.innerHTML = Object.entries(THEMES).map(([k, t]) => `<option value="${k}">${t.label}</option>`).join('');
+  sf.theme_preset.value = site.theme?.preset || 'brand';
+  for (const k of ['accent', 'paper', 'deep', 'ink']) sf['theme_' + k].value = site.theme?.custom?.[k] || '';
+  sf.author_photo_url.value = site.author_photo_url || ''; sf.author_bio.value = site.author_bio || '';
+  sf.excerpt_title.value = site.excerpt?.title || ''; sf.excerpt_text.value = site.excerpt?.text || ''; sf.excerpt_pdf_url.value = site.excerpt?.pdf_url || '';
   sf.cohort_enabled.checked = !!SETTINGS.cohort.enabled;
 }
 $('#book-form').onsubmit = async (e) => {
@@ -250,7 +257,14 @@ $('#site-form').onsubmit = async (e) => {
   e.preventDefault(); const d = formData(e.currentTarget);
   const testimonials = d.testimonials.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => { const [quote, name] = l.split('|').map((x) => x.trim()); return { quote, name }; });
   try {
-    await A('settings/site', { method: 'PUT', body: { value: { ...SETTINGS.site, author: d.author, brand: d.brand, sender_name: d.sender_name, reply_to: d.reply_to, updates_list_name: d.updates_list_name, testimonials } } });
+    const hex = (v) => (/^#[0-9a-f]{3,8}$/i.test((v || '').trim()) ? v.trim() : undefined);
+    const custom = Object.fromEntries(['accent', 'paper', 'deep', 'ink'].map((k) => [k, hex(d['theme_' + k])]).filter(([, v]) => v));
+    const volumes = d.volumes.split(',').map((v) => v.trim()).filter(Boolean);
+    const value = { ...SETTINGS.site, author: d.author, brand: d.brand, sender_name: d.sender_name, reply_to: d.reply_to, updates_list_name: d.updates_list_name, testimonials,
+      volumes: volumes.length ? volumes : ['Volume One'], theme: { preset: d.theme_preset, custom },
+      author_photo_url: d.author_photo_url.trim(), author_bio: d.author_bio.trim(),
+      excerpt: { title: d.excerpt_title.trim(), text: d.excerpt_text.trim(), pdf_url: d.excerpt_pdf_url.trim() } };
+    await A('settings/site', { method: 'PUT', body: { value } }); SETTINGS.site = value;
     await A('settings/cohort', { method: 'PUT', body: { value: { ...SETTINGS.cohort, enabled: d.cohort_enabled } } });
     say($('#site-msg'), 'Saved ✓', 'ok');
   } catch (err) { say($('#site-msg'), err.message); }

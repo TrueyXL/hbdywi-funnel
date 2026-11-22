@@ -1,4 +1,4 @@
-import { $, $$, fmt, fmtDate, fmtTime, tzName, viewerTz, money, esc, formData, busy, say, store, header, BLOOM_SVG } from './common.js';
+import { $, $$, fmt, fmtDate, fmtTime, tzName, viewerTz, money, esc, formData, busy, say, store, header, applyTheme, BLOOM_SVG } from './common.js';
 import { api, track, amazonHref, demoBar, DEMO } from './api.js';
 
 demoBar();
@@ -15,23 +15,42 @@ function bind(key, value) { if (value) $$(`[data-bind="${key}"]`).forEach((el) =
 async function load() {
   try { cfg = await api('config'); } catch (e) { $('#act-dates').innerHTML = `<p class="msg err">Couldn't load dates. Please refresh.</p>`; return; }
   const { site, book, activation, cohort, visit } = cfg;
+  if (site.theme) applyTheme(site.theme);
   bind('brand', site.brand); bind('author', site.author); bind('updates_list_name', site.updates_list_name);
   bind('threshold', visit.threshold);
   if (book) {
     const real = (v) => v && !String(v).includes('{{');
-    if (real(book.title)) { bind('title', book.title); document.title = `${book.title}, Volume One · ${site.author}`; }
+    if (real(book.title)) { bind('title', book.title); document.title = `${book.title} · ${site.author}`; }
     if (real(book.promise)) bind('promise', book.promise);
-    bind('subtitle_or_promise', real(book.subtitle) ? book.subtitle : real(book.promise) ? book.promise : null);
+    bind('subtitle_or_promise', real(book.promise) ? book.promise : null);
     bind('author_line', `${site.author} · Volume One`);
     if (real(book.cover_url)) $$('.cover').forEach((c) => (c.innerHTML = `<img src="${esc(book.cover_url)}" alt="${esc(book.title)} book cover">`));
     const fm = book.formats || [];
     $$('#buy-buttons [data-amazon]').forEach((a) => { if (fm.length && !fm.includes(a.dataset.amazon)) a.remove(); });
   }
-  if (Array.isArray(site.testimonials) && site.testimonials.length) {
-    $('#testimonials').innerHTML = site.testimonials.map((t) => `<figure class="card" style="text-align:left;margin:0"><blockquote class="quote">“${esc(t.quote)}”</blockquote><figcaption class="small muted" style="margin-top:10px">${esc(t.name || '')}</figcaption></figure>`).join('');
+  renderAuthor(site); renderExcerpt(site.excerpt);
+  const ts = (site.testimonials || []).filter((t) => t.quote);
+  if (ts.length) {
+    $('#testimonials').innerHTML = ts.map((t) => `<figure class="card quote-card reveal in"><blockquote class="quote">“${esc(t.quote)}”</blockquote><figcaption class="small muted">${esc(t.name || '')}</figcaption></figure>`).join('');
+    $('#testimonials-wrap').classList.remove('hidden');
   }
   renderActivation(activation);
   renderCohorts(cohort);
+}
+
+// paragraphs from plain text (blank line = new paragraph), escaped
+const paras = (txt) => String(txt || '').trim().split(/\n\s*\n/).map((p) => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join('');
+const realUrl = (u) => /^https:\/\//.test(u || '');
+
+function renderAuthor(site) {
+  if (realUrl(site.author_photo_url)) $('#author-photo').innerHTML = `<img src="${esc(site.author_photo_url)}" alt="${esc(site.author)}, author" loading="lazy">`;
+  if (site.author_bio && !site.author_bio.includes('{{')) $('#author-bio').innerHTML = paras(site.author_bio);
+}
+function renderExcerpt(x) {
+  if (!x) return;
+  if (x.title) bind('excerpt_title', x.title);
+  if (x.text?.trim()) $('#excerpt-body').innerHTML = paras(x.text);
+  if (realUrl(x.pdf_url)) { const a = $('#excerpt-pdf'); a.href = x.pdf_url; a.classList.remove('hidden'); }
 }
 
 // ---------------- activation ----------------
@@ -67,6 +86,7 @@ function renderCohorts(c) {
   const list = $('#co-list');
   const open = (c.cohorts || []).filter((x) => x.open);
   if (c.cohorts?.[0]) bind('price', money(c.cohorts[0].price_cents, c.cohorts[0].currency)), bind('price_tag', money(c.cohorts[0].price_cents, c.cohorts[0].currency));
+  if (c.cohorts?.[0]?.capacity) bind('cohort_cap', c.cohorts[0].capacity);
   if (!c.enabled || !open.length) {
     $('#co-form').classList.add('hidden'); $('#wl-form').classList.remove('hidden');
     $('#wl-text').textContent = c.waitlist_message; return;
